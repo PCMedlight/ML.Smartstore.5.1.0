@@ -1,7 +1,42 @@
 ﻿@using Smartstore.Web.Models.Catalog
 @using Smartstore.Core.Catalog.Products
+@using System.Text.Json;
+@using Newtonsoft.Json;
+@using Newtonsoft.Json.Linq;
 
-@model ProductDetailsModel
+
+@model ProductDetailsModel;
+
+@functions {
+
+    public class JsonAccessor
+    {
+        private readonly JObject _data;
+
+        public JsonAccessor(string json)
+        {
+            _data = JObject.Parse(json);
+        }
+
+        public string Get(string key)
+        {
+            JToken value = _data.SelectToken(key);
+            if (value != null)
+            {
+                return value.ToString();
+            }
+            return "undefined";
+        }
+    }
+
+}
+
+@{
+    var localizationData = ViewData["Localization"] as string;
+    var D = new JsonAccessor(localizationData);
+}
+
+
 
 @{
     Assets.AppendTitleParts(Model.MetaTitle.HasValue() ? Model.MetaTitle : Model.Name);
@@ -24,6 +59,15 @@
 <partial name="MetaProperties" model="Model.MetaProperties" />
 
 <div class="page product-details-page" itemscope itemtype="http://schema.org/Product">
+
+    <div>
+        <h2>@D.Get("root.header.title")</h2>
+        <p>@D.Get("root.header.subtitle")</p>
+    </div>
+
+
+
+
     <zone name="productdetails_top" />
     
     <article class="pd page-body">
