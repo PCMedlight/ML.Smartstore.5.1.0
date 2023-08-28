@@ -1,0 +1,67 @@
+//
+// Customize the child theme here with css overrides
+// or new selectors (for theme developers)
+// --------------------------------------------------
+
+// Buttons -------------------------------------------------------------------------------
+
+.btn {
+
+    border-radius: 5px;
+    font-weight: 300;
+    transition-property: transform, box-shadow, color, background-color, border-color, opacity;
+    transition-timing-function: cubic-bezier(0.25, 1, 0.33, 1);
+    transition-duration: .35s;
+    transform-origin: center center;
+}
+
+.btn:hover {
+
+}
+
+.btn:active {
+    transform: scale(.95);
+}
+
+.btn-border {
+    cursor: pointer;
+    background-color: transparent;
+    border: 2px solid black;
+    color: black;
+    border-radius: 0;
+    padding: 1rem;
+    font-weight: 300;
+    transition-property: transform, box-shadow, color, background-color, border-color, opacity;
+    transition-timing-function: cubic-bezier(0.25, 1, 0.33, 1);
+    transition-duration: .35s;
+    transform-origin: center center;
+    font-size: 1rem;
+    --shadow-color-rgb: 0, 0, 0;
+    --shadow-intensity: 1;
+    box-shadow: 0 1px 1px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.07)),
+        0 2px 4px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.1)),
+        0 4px 8px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.08));
+
+    &:hover {
+        background-color: transparent;
+        transform: translateY(-3px);
+    }
+
+    &:active {
+        background-color: black;
+        color: white;
+    }
+}
+
+
+.get-quote-btn {
+    background-color: $primary;
+    color: white;
+    border: transparent;
+}
+
+.get-quote-btn:hover {
+    background-color: black;
+}
+
+

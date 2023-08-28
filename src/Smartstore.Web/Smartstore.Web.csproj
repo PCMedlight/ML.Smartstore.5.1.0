@@ -26,6 +26,10 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.2.2">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
         <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.5" />
 	</ItemGroup>
@@ -37,10 +41,10 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-		<Compile Remove="App_Data\**; Modules\**; Themes\**" />
-		<Content Remove="App_Data\**; Modules\**; Themes\**" />
-		<EmbeddedResource Remove="App_Data\**; Modules\**; Themes\**" />
-		<None Remove="App_Data\**; Modules\**; Themes\**" />
+		<Compile Remove="App_Data\**; Modules\**;" />
+		<Content Remove="App_Data\**; Modules\**;" />
+		<EmbeddedResource Remove="App_Data\**; Modules\**;" />
+		<None Remove="App_Data\**; Modules\**;" />
 	</ItemGroup>
 	
 	<!-- Copy publishable files in App_Data directory -->
@@ -81,6 +85,7 @@
 	<ItemGroup>
         <Content Remove="wwwroot\lib\bi\bootstrap-icons-all.svg" CopyToPublishDirectory="Never" />
         <Content Remove="wwwroot\lib\fontastic\icomoon\**" CopyToPublishDirectory="Never" />
+        <TypeScriptCompile Remove="Themes\MEDlight-Theme\**" />
 	</ItemGroup>
 
 	<ItemGroup>

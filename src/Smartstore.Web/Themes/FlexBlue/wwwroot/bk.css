@@ -1,0 +1,788 @@
+
+head{display: none;}
+
+
+
+
+
+
+
+
+
+
+
+
+// NAVBAR Scrollspy -------------------------------------------------------------------------------
+
+#page{
+    overflow: visible !important;
+    display: block !important;
+}
+
+#myNavbar{
+    top:0px ;
+    display: block ; 
+    -webkit-position: sticky;
+    position: sticky; /* This will work on modern browsers */
+    backdrop-filter: saturate(180%) blur(10px);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+@include media-breakpoint-down(sm) {
+    #myNavbar .container {
+        justify-content: center;
+    }
+
+    #myNavbar .get-quote-btn {
+
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #myNavbar .nav {
+
+        display: none ;
+    }
+}
+
+
+.nav-link.scrollspy-nav {
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+    color: $dark;
+    border-bottom: 2px solid transparent;
+    transition: 0.3s;
+}
+
+.nav-link.scrollspy-nav.active {
+    background-color: transparent;
+    color: $dark;
+    border-bottom: 2px solid $dark;
+
+}
+
+.nav-link.scrollspy-nav:hover {
+    color: black;
+    border-bottom: 2px solid $primary;
+}
+
+.get-quote-btn {
+    background-color: $primary;
+    color: white;
+    border: transparent;
+}
+
+.get-quote-btn:hover {
+    background-color: black;
+}
+
+
+
+
+/// Configurator //////////////
+.configurator-btn {
+    border: 1px solid $accent3;
+
+    box-shadow: none !important;
+    background: white;
+    outline: transparent solid 2px;
+    border-radius: 5px !important;
+    transition: 0.3s;
+}
+
+
+@font-face {
+    font-family: 'Abel';
+    src: url("/Themes/flexblack/fonts/Abel-Regular.ttf");
+}
+
+.list-group {
+    font-family: Abel, "Helvetica Neue", Arial, sans-serif !important;
+
+    .form-check input[type="radio"]+div {
+        border-radius: 5px;
+        outline: transparent solid 2px;
+        transition: 0.3s;
+        pointer-events: none;
+        position: absolute;
+        border: 1px solid $accent3;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+    }
+
+    .form-check input[type="radio"]:checked+div {
+        position: absolute;
+        border: 1px solid var(--blue);
+        outline: var(--blue) solid 2px;
+    }
+
+    .form-check input[type="checkbox"]+div {
+        box-shadow: 0 2px 16px -2px rgba(26, 33, 75, 0.1), 0 2px 3px -2px rgba(26, 33, 75, 0.1);
+        border-radius: 5px;
+        outline: transparent solid 2px;
+        transition: 0.3s;
+        pointer-events: none;
+        position: absolute;
+        border: 1px solid $accent3;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+    }
+
+    .form-check input[type="checkbox"]:checked+div {
+        position: absolute;
+        border: 1px solid var(--blue);
+        outline: var(--blue) solid 2px;
+    }
+
+    .form-checkbox input[type="checkbox"]+div {
+        box-shadow: 0 2px 16px -2px rgba(26, 33, 75, 0.1), 0 2px 3px -2px rgba(26, 33, 75, 0.1);
+        border-radius: 5px;
+        outline: transparent solid 2px;
+        transition: 0.3s;
+
+        border: 1px solid $accent3;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+    }
+
+    .form-checkbox input[type="checkbox"]:checked+div {
+        border: 1px solid var(--blue);
+        outline: var(--blue) solid 2px;
+    }
+
+
+    .form-checkbox input[type="checkbox"]~div>.checkbox-button {
+        transition: 0.3s;
+        background-color: transparent;
+        user-select: none;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .form-checkbox input[type="checkbox"]~div>.checkbox-button::before {
+        content: "Add";
+    }
+
+
+
+    .form-checkbox input[type="checkbox"]:checked~div>.checkbox-button {
+        color: var(--blue);
+    }
+
+    .form-checkbox input[type="checkbox"]:checked~div>.checkbox-button::before {
+        content: "Remove";
+    }
+}
+
+/// Page Progress bar //////////////
+
+.page-progress {
+    top: 100px;
+    position: sticky;
+    display: none;
+}
+
+
+$brand-success: #3bdb61;
+$loader-size: 1.5rem;
+$check-height: $loader-size/2;
+$check-width: $check-height/2;
+$check-left: (
+    $loader-size/6 + $loader-size/12
+);
+$check-thickness: 3px;
+$check-color: $brand-success;
+
+.progress-segment {
+    background-color: $accent3;
+    height: 2px;
+    transition: 1600ms;
+    transition-delay: 200ms;
+    &.active {
+        background-color: $brand-success;
+    }
+}
+
+.progress-segment.circle-loader {
+    border: 2px solid $accent3;
+    border-radius: 50%;
+    width: $loader-size;
+    height: $loader-size;
+    background-color: transparent;
+}
+
+.progress-segment.circle-loader.active {
+    border-color: $check-color;
+    transition: border 500ms ease-out;
+    background-color: transparent;
+}
+
+.progress-segment.circle-loader .checkmark {
+    display: none;
+    position: relative;
+    opacity: 1;
+    height: $check-height;
+    width: $check-width;
+    transform-origin: left top;
+    border-right: $check-thickness solid $check-color;
+    border-top: $check-thickness solid $check-color;
+    left: ($check-left - ($check-left / 3));
+    top: ($check-height - ($check-height / 9));
+    transform: scaleX(-1) rotate(135deg);
+}
+
+.progress-segment.circle-loader.active .checkmark {
+    display: inherit;
+    animation-duration: 1800ms;
+    animation-timing-function: ease;
+    animation-name: checkmark-animation;
+    transform: scaleX(-1) rotate(135deg);
+}
+
+.progress-v {
+    height: 3rem;
+    width: 2px;
+    margin-bottom: 0.3rem;
+    margin-top: 0.3rem;
+}
+
+.page-progress-v {
+    position: sticky;
+    top: calc(50vh - 5%);
+
+}
+
+
+@keyframes checkmark-animation {
+    0% {
+        height: 0;
+        width: 0;
+        opacity: 1;
+    }
+
+    20% {
+        height: 0;
+        width: $check-width;
+        opacity: 1;
+    }
+
+    40% {
+        height: $check-height;
+        width: $check-width;
+        opacity: 1;
+    }
+
+    100% {
+        height: $check-height;
+        width: $check-width;
+        opacity: 1;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+/// Configuration Button //////////////
+
+#nav-quote-button {
+    width: 12rem;
+    height: 2.75rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-normal,
+.btn-alt {
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .3s ease, opacity .3s ease;
+}
+
+.btn-normal {
+    opacity: 1;
+}
+
+.btn-alt {
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+#nav-quote-button.btn-config .btn-normal {
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+#nav-quote-button.btn-config .btn-alt {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+
+
+
+
+
+
+////////// Card Configuration
+/// 
+/// 
+
+.scrolling-wrapper {
+    overflow-x: auto;
+}
+
+.check-card {
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: none;
+        opacity: 0.9;
+    }
+
+
+    & .card-footer {
+        transition: all 0.3s ease-in-out;
+    }
+
+    & .card-footer:hover {
+        background-color: $accent3;
+    }
+}
+
+.form-check-input:checked+.check-card {
+    border: 2px solid blue;
+}
+
+
+
+
+
+
+
+.w-scrolling-wrapper {
+    display: flex;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    // Hide standard scrollbar in Firefox
+    -ms-overflow-style: none;
+    // Hide standard scrollbar in IE/Edge 
+}
+
+.w-scrolling-wrapper::-webkit-scrollbar {
+    display: none;
+    // Hide standard scrollbar in Chrome, Safari, and Opera //
+}
+
+
+.slide:first-child {
+    padding-left: calc((50vw - 10rem));
+    padding-right: 0;
+}
+
+.slide:last-child {
+    padding-right: calc((50vw - 10rem));
+    padding-left: 0;
+}
+
+.paginationContainer {
+    display: block;
+    background-color: $accent3;
+    justify-content: center;
+    margin-top: 1rem;
+    width: 15rem;
+    height: 4px;
+}
+
+.indicator {
+    position: relative;
+    width: 5rem;
+    height: 4px;
+    background-color: $primary;
+    transition: transform 0.3s ease-in-out;
+}
+
+.slider-container::after {
+    position: absolute;
+    content: "";
+    height: 100%;
+    width: 100%;
+    opacity: .9;
+    background: linear-gradient(to left, white 1%, transparent 15%, transparent 85%, white 100%);
+    pointer-events: none;
+}
+
+
+
+
+
+
+
+.image-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.background-image {
+    position: relative;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.featureBox-input{
+    position: absolute;
+    transform-origin: center center;
+}
+
+.featureBox-label {
+    opacity: 0;
+    display: none;
+}
+
+.featureBox-label.active {
+    opacity: 1;
+    display: inline-block;
+}
+
+.custom-radio {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.featureBox-input {
+    background-color: $accent2;
+    opacity: 0.9;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    transition: transform 0.3s ease-in-out;
+    &:hover{
+        transform: scale(1.15);
+    }
+}
+
+.featureBox-input.active {
+    background-color:$accent3;
+    animation: pulse2 1.5s infinite;
+    //animation: pulse 1s infinite;
+}    
+
+.active .plus {
+    display: none;
+}
+
+.circle {
+    position: absolute;
+    color: white;
+    transition: transform 0.3s ease-in-out;
+    opacity: 0;
+}
+
+.active .circle {
+    display: inline-block;
+}
+
+.featureBox-input.active .circle {
+    opacity: 1;
+    transform: scale(1.15); /* Added scaling transformation */
+}
+
+
+
+
+  @keyframes pulse2 {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+      opacity: 0.85;
+      transform: scale(0.9);
+    }
+    100% {
+
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+
+
+//Accordion Chevrons
+  .card-link .fa-chevron-down {
+    font-size: 1.5rem;
+    transform: rotate(0deg);
+    transition: transform .3s linear(0 0%, 0.19 6.51%, 0.53 14.34%, 0.87 23.71%, 1.01 30.17%, 1.06 41.09%, 1.03 54.07%, 0.98 68.07%, 0.98 80.09%, 1 100%);
+  }
+  .card-link.collapsed .fa-chevron-down {
+    font-size: 1.5rem;
+    transform: rotate(-180deg);
+}
+
+
+//Carousel Chevrons
+
+$chevron-size:calc(2.5rem + 2.1vw);
+
+.carousel-control-next, .carousel-control-prev{
+transition: .3s !important;
+}
+
+.chevron-icon {
+   background-size: contain;
+   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+   
+}
+
+.carousel-control-next-icon {
+    height:$chevron-size;
+    width:$chevron-size;
+    background-size: cover;
+}
+
+.carousel-control-prev-icon {
+    height:$chevron-size;
+    width:$chevron-size;
+    background-size: cover;
+    transform: scaleX(-1);
+}
+
+@media (max-width: 768px) {
+    .carousel-info {
+        color:white;
+    }
+
+    .carousel-text-offset {
+        transform: translateY(- 100%);
+    }
+
+    .carousel-image-overlay {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100vw;
+        height: 20rem;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.0));
+    }
+}
+
+
+
+.carousel-indicators li {
+    box-shadow: rgba(0,0,0,0.15) 0px 1px 5px;
+    }
+
+
+
+
+
+$bgc:#24303a;
+$chart-bg:#1e2730;
+$chart-txt:#4a667a;
+$green:#48c15e;
+$red:#ef6670;
+
+ 
+#graph-1 { 
+    stroke-width: 0.5;
+    fill: transparent;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: lineani 1.3s linear forwards;
+  }
+
+  #graph-2 { 
+    stroke-width: 0.5;
+    fill: transparent;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: lineani 1.3s linear forwards;
+  }
+ 
+  
+  @keyframes lineani {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  
+
+  .charts-container{
+    padding:20px;
+    width:100%;
+    max-width:1024px;
+    display:inline-block;
+    box-sizing:border-box;
+  }
+
+  .chart{
+    text-align:left;
+    position: relative;
+    height:auto;
+    display:inline-block;
+    position:relative;
+    @media screen and (max-width:700px){
+      width:calc(100% - 20px);
+    }
+    @media screen and (min-width:700px){
+      width:calc(50% - 20px);
+    }
+  }
+  
+
+  .philips-background {
+      max-height: 15rem;
+      background-image: url(/themes/medlight-theme/images/PhilipsLightingUVLamps.png);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center right;
+
+  }
+
+
+//Feature Cards
+.feature-cards .card{
+border:0;
+}
+
+.feature-cards .divider-2{
+margin-bottom: 1rem;
+background-color: $primary;
+}
+
+.feature-cards .card-body{
+    border: 1px solid $accent3;
+    border-radius: 6px;
+box-shadow: 2px 3px 4px rgba(0,0,0,0.05);
+transition: 0.3s;
+}
+
+.feature-cards .card-body:hover{
+    background-color:$accent2;
+}
+
+.feature-cards .card-columns {
+    @include media-breakpoint-only(sm) {
+      column-count: 2;
+    }
+    @include media-breakpoint-only(md) {
+      column-count: 3;
+    }
+  }
+
+
+//Collapse button
+  .btn-collapse {
+    outline: 0;
+    background-color: transparent;
+    min-width: 20rem;
+    cursor: pointer;
+    display: flex;
+    padding: 0;
+    justify-content: space-between;
+    transition: 0.3s;
+}
+
+.btn-collapse:focus {
+    outline: 0;
+}
+
+.btn-collapse:active {
+    transform: scale(1.10);
+}
+
+.btn-collapse:hover {
+    background-color: black;
+    & .btn-label {
+        color: white;
+    }
+    & .btn-icon {
+        color: white;
+    }
+}
+
+.btn-collapse .btn-icon {
+    height: 2rem;
+    display: inline-block;
+    transition: transform 0.5s linear(0 0%, 0.12 12.58%, 0.4 22.22%, 1 33.33%, 1.09 39.54%, 1.03 47.71%, 0.99 58.82%, 0.99 72.39%, 1 85.46%, 1 100%);
+}
+
+.btn-collapse .btn-label {
+    font-size: 1.05rem;
+    padding-left: 0.5rem;
+    padding-bottom: 0.25rem;
+    
+    display: inline-block;
+    margin: 0;
+    margin-top: auto;
+}
+
+.btn-collapse:not(.collapsed) .btn-icon {
+    transform: rotate(90deg);
+    /* Rotate icon when collapsed class is not present */
+} 
+
+
+
+
+
+
+
+.skindex-gif-container{
+    top: 8%;
+    left: 44%;
+    position: absolute;
+    max-width: 70%;
+    max-height: 60%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    }
+    
+
+
+    #footer{
+        margin-top: 5rem;
+        color:rgba(0, 0, 0, 0.5);
+        background-color: $accent2;
+        & h4{
+            color:rgba(0, 0, 0, 0.5);
+        }
+        & a{
+            color:rgba(0, 0, 0, 0.3);
+        }
+    }

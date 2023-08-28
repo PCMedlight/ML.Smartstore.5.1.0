@@ -1,0 +1,98 @@
+.modal-backdrop{
+    background-color: rgba(0,0,0,.1);
+}
+
+.display-7 {
+font-size: calc(1.15rem + .3vw);
+}
+
+.display-8 {
+    font-size: calc(1rem + .3vw);
+    }
+
+@media (min-width: 768px) {
+    .textColumn-2 {
+        columns: 2;
+        column-gap: 2rem;
+    }
+}
+
+.bold {
+    font-weight: 600;
+}
+
+.opacity-50 {
+    opacity: 50%;
+}
+
+.opacity-75 {
+    opacity: 75%;
+}
+
+.divider-1{
+    height: 1px;
+    width:100%;
+}
+
+.divider-2{
+    height: 2px;
+    width:100%;
+}
+
+.divider-3{
+    height: 3px;
+    width:100%;
+}
+
+.divider-4{
+    height: 4px;
+    width:100%;
+}
+
+.gap-1 {
+    gap: 1rem;
+}
+
+.gap-2 {
+    gap: 2rem;
+}
+
+.gap-3 {
+    gap: 3rem;
+}
+
+
+.bg-blue {
+    background-color: var(--blue);
+}
+
+.bg-accent1 {
+    background-color: $accent1;
+}
+
+.bg-accent2 {
+    background-color: $accent2;
+}
+
+.bg-accent3 {
+    background-color: $accent3;
+}
+
+.bg-accent4 {
+    background-color: $accent4;
+}
+
+.border-1 {
+    border-width: 1px;
+    border-style: solid;
+}
+
+.border-2 {
+    border-width: 2px;
+    border-style: solid;
+}
+
+.border-3 {
+    border-width: 3px;
+    border-style: solid;
+}

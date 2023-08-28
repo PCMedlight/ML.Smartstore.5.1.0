@@ -1,0 +1,77 @@
+//
+// Customize the child theme here with css overrides
+// or new selectors (for theme developers)
+// --------------------------------------------------
+
+#myNavbar{
+    top:0 ;
+    display: block ; 
+    -webkit-position: sticky;
+    position: sticky;
+    backdrop-filter: saturate(180%) blur(5px);
+    background-color: rgba(255, 255, 255, 0.2);
+    display: block;
+}
+
+
+.nav-link.scrollspy-nav {
+    padding: 0;
+    border-radius: 0;
+    color: $dark;
+    border-bottom: 2px solid transparent;
+    transition: 0.3s;
+}
+
+.nav-link.scrollspy-nav.active {
+    color: $dark;
+    border-bottom: 2px solid $dark;
+
+}
+
+.nav-link.scrollspy-nav:hover {
+    border-bottom: 2px solid $primary;
+}
+
+#nav-quote-button {
+    width: 12rem;
+    height: 2.75rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-normal,
+.btn-alt {
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .3s ease, opacity .3s ease;
+}
+
+
+
+#nav-quote-button .btn-normal {
+    transform: translateY(0%);
+    opacity: 1;
+}
+
+#nav-quote-button .btn-alt {
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+#nav-quote-button.btn-config .btn-normal {
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+#nav-quote-button.btn-config .btn-alt {
+    transform: translateY(0);
+    opacity: 1;
+}
+

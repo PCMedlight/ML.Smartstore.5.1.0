@@ -1,0 +1,96 @@
+﻿<!-- _ContactForm.cshtml -->
+@{
+    // Declare a local variable to hold the value of FullNameRequired
+    string FullName = "Voller Name";
+    bool FullNameRequired = true;
+}
+
+
+
+<!-- Vertically centered modal -->
+<div class="modal fade" id="submitConfigModal" tabindex="-1" aria-labelledby="submitConfigModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row">
+
+                        <div class="col-md-8">
+                            <h4 class="mb-3">Get a free Quote</h4>
+                            <div id="alerts-container"></div>
+                            <form method="post" id="configSend-form" class="contact-form" action="/contactus/"
+                                novalidate="novalidate">
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="FullName">Your Name</label>
+                                    <div class="col-sm-9">
+                                        <input class="remember form-control" type="text" id="FullName" name="FullName"
+                                            data-val="true" placeholder="Your Name">
+                                        <span class="field-validation-valid" data-valmsg-for="FullName"
+                                            data-valmsg-replace="true"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label required" for="Email">Your email</label>
+                                    <div class="col-sm-9">
+                                        <input class="remember form-control" type="email" data-val="true"
+                                            data-val-email="'Your email' is not a valid email address."
+                                            data-val-required="" id="Email" name="Email" required="">
+                                        <span class="field-validation-valid" data-valmsg-for="Email"
+                                            data-valmsg-replace="true"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class=" col-form-label required" for="Enquiry">Enquiry</label>
+                                    <div class="">
+                                        <textarea placeholder="Enter your enquiry"
+                                            class="personal-message remember form-control" rows="6" data-val="true"
+                                            data-val-required="" id="Enquiry" name="Enquiry"></textarea>
+                                        <span class="field-validation-valid" data-valmsg-for="Enquiry"
+                                            data-valmsg-replace="true"></span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="text-muted">
+                                        *Required
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <button type="submit" name="send-email" class="ml-auto btn btn-primary btn-lg">Send
+                                        Configuration</button>
+                                    <button type="button" class="btn btn-secondary ml-2"
+                                        data-dismiss="modal">Close</button>
+                                </div>
+                                <input name="__RequestVerificationToken" type="hidden">
+                            </form>
+                        </div>
+
+                        <div class="col-md-4 mb-4">
+                            <h4 class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted">Your Configuration</span>
+                            </h4>
+                            <ul id="configuration-List" class="list-group mb-3">
+                                <li class="list-group-item ">
+                                    <h6 class="my-0">N-LINE PRO</h6>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+

@@ -1,0 +1,132 @@
+<script src="/lib/vue/vue.min.js"></script>
+<script src="/Themes/MEDlight-Theme/Vue/card-slider.js"></script>
+
+
+<style>
+
+  .card-container {
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }    
+
+  .card {
+    --card-width: 20rem;
+    width:var(--card-width);
+    flex: 0 0 auto;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    border: 2px solid lightgrey; /* Border for selected card */
+    margin:1rem;
+  }
+
+  .card:first-child {
+    margin-left: calc(50vw - (var(--card-width) / 2)); /* Add left margin to the first card */
+  }
+  .card:last-child {
+    margin-right: calc(50vw - (var(--card-width) / 2)); /* Add right margin to the last card */
+  }
+
+  .card:hover {
+    transform: translateY(-0.5rem);
+  }
+  .card.selected {
+    border: 2px solid blue; /* Border for selected card */
+    transform: translateY(-0.5rem);
+  }
+
+  .paginationContainer {
+    display: block;
+    background-color: grey;
+    justify-content: center;
+
+    transform: translateX(-50%);
+  position: fixed;
+  bottom: 0;
+}
+
+.indicator {
+    position: relative;
+    width: 5rem;
+    height: 4px;
+    background-color: blue;
+    transition: transform 0.3s ease-in-out;
+}
+
+}
+</style>
+
+
+
+<div id="select-N-LINE-Model_radio" class="container-fluid p-0 my-5">
+    <card-container :card-index="1">
+        <div class="card">
+            <img style="height:15rem;"
+                class="card-img-top fit-contain py-3 border-bottom"
+                src="/themes/medlight-theme/images\Produkte\N-LINEpro\MEDlight_N-LINE-Pro-10_A3 Kopie.png"
+                alt="Card image cap">
+            <div class="card-title my-2">
+                <h4 class="card-title text-center bold my-auto">N-LINE</h4>
+            </div>                
+            <div class="card-body pt-0">                
+                <ul class="card-text opacity-75">
+                    <li>Industrial-Grade Control Panel</li>
+                    <li>No Network Capabilities</li>
+                </ul>
+            </div>
+            <div class="bg-accent2 card-footer text-center">Select</div>
+        </div>
+
+        <div class="card">
+            <img style="height:15rem;"
+                class="card-img-top fit-contain py-3 border-bottom"
+                src="/themes/medlight-theme/images\Produkte\N-LINEpro\MEDlight_N-LINE-Pro-10_A3 Kopie.png"
+                alt="Card image cap">
+            <div class="card-title my-2">
+                <h4 class="card-title text-center bold my-auto">N-LINE PRO</h4>
+            </div>                
+            <div class="card-body pt-0">                
+                <ul class="card-text opacity-75">
+                    <li>40x UV lamps (4900VA)</li>
+                    <li>Touchscreen 6"</li>
+                    <li>PIN authorization</li>
+                    <li>Emergency handle</li>
+                    <li>Network Capabilites</li>
+                </ul>
+            </div>
+            <div class="bg-accent2 card-footer text-center">Select</div>
+        </div>
+
+        <div class="card">
+            <img style="height:15rem;"
+                class="card-img-top fit-contain py-3 border-bottom"
+                src="/themes/medlight-theme/images\Produkte\N-LINEpro\MEDlight_N-LINE-Pro-10_A3 Kopie.png"
+                alt="Card image cap">
+            <div class="card-title my-2">
+                <h4 class="card-title text-center bold my-auto">N-LINE PRO MAX</h4>
+            </div>                
+            <div class="card-body pt-0">                
+                <ul class="card-text opacity-75">
+                                                <li>All N-LINE PRO Features</li>
+                                                <li>Extra Large Touchscreen 12"</li>
+                                                <li>Patient Voice Guide</li>
+                                                <li>Active Comfort Flow</li>
+                </ul>
+            </div>
+            <div class="bg-accent2 card-footer text-center">Select</div>
+        </div>
+
+    </card-container>
+</div>
+
+<script>
+    
+      new Vue({
+        el: '#select-N-LINE-Model_radio'
+      });
+    
+</script>
+

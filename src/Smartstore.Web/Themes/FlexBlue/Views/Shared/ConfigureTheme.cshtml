@@ -1,0 +1,64 @@
+﻿@using Smartstore.Web.Theming
+@using Smartstore.Admin.Models.Localization
+
+
+@model IDictionary<string, object>
+
+@addTagHelper Smartstore.Web.TagHelpers.Admin.*, Smartstore.Web.Common 
+
+@{
+    Layout = null;
+}
+
+<tabstrip id="theme-flex-edit" sm-nav-style="Material" class="theme-edit">
+    <tab sm-title="@T("Common.General")" sm-selected="true">
+        <div class="adminContent">
+            @{
+               
+            }
+        </div>
+    </tab>
+    <tab sm-title="Sprich Deutsch">
+        <div class="adminContent">
+            @{
+                ThemeVarEditor("font-family-sans-serif", "Typo");
+                ThemeVarEditor("font-family-monospace");
+ 
+            }
+
+            @{
+                ThemeVarEditor("google-font-1");
+                ThemeVarEditor("google-font-2");
+                ThemeVarEditor("google-font-3");
+            }
+        </div>
+    </tab>
+</tabstrip>
+
+@{
+    void ThemeVarEditor(string varName, string groupName = null, string helpText = null)
+    {
+        var themeVar = Display.GetThemeDescriptor().Variables[varName];
+
+        if (groupName != null)
+        {
+            <div class="adminRow">
+                <div class="admin-config-group">
+                    <div class="title">@groupName</div>
+                </div>
+            </div>
+        }
+
+        <div class="adminRow">
+            <div class="adminTitle">
+                @Html.ThemeVarLabel(themeVar, helpText)
+            </div>
+            <div class="adminData">
+                @Html.ThemeVarEditor(themeVar, Model[varName])
+            </div>
+            <div class="d-none d-xl-flex align-items-center">
+                @Html.ThemeVarChainInfo(themeVar)
+            </div>
+        </div>
+    }
+}

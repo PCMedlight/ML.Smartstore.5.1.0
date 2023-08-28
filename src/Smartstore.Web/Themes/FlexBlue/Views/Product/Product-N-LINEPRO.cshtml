@@ -1,0 +1,1410 @@
+﻿@using Smartstore.Web.Models.Catalog
+@using Smartstore.Core.Catalog.Products
+@using Smartstore.Core.Localization
+
+@using System.Text.Json;
+@using Newtonsoft.Json;
+@using Newtonsoft.Json.Linq;
+
+
+
+@model ProductDetailsModel
+
+
+
+@{
+    Assets.AppendTitleParts(Model.MetaTitle.HasValue() ? Model.MetaTitle : Model.Name);
+    Assets.AppendMetaDescriptionParts(Model.MetaDescription);
+    Assets.AppendMetaKeywordsParts(Model.MetaKeywords);
+    if (Model.CanonicalUrl.HasValue())
+    {
+        Assets.AppendCanonicalUrlParts(Model.CanonicalUrl);
+    }
+
+    string updateUrl = Url.Action("UpdateProductDetails", "Product", new
+    {
+        productId = Model.Id,
+        bundleItemId = Model.BundleItem.Id,
+        itemType = (string)null // TODO: (mc) WTF!?
+    });
+}
+
+<!-- import dialog use POST & contact formular -->
+@Html.Partial("_ContactUs")
+
+
+
+@functions {
+
+    public class JsonAccessor
+    {
+        private readonly JObject _data;
+
+        public JsonAccessor(string json)
+        {
+            _data = JObject.Parse(json);
+        }
+
+        public string Get(string key)
+        {
+            JToken value = _data.SelectToken(key);
+            if (value != null)
+            {
+                return value.ToString();
+            }
+            return "undefined";
+        }
+    }
+
+}
+
+@{
+    var localizationData = ViewData["Localization"] as string;
+    var D = new JsonAccessor(localizationData);
+}
+
+
+
+<div>
+    <h2></h2>
+    <p>@D.Get("root.header.subtitle")</p>
+</div>
+
+
+
+<!-- Site Navbar with scrollspy. ----------------->
+<script>
+    $(document).ready(function () {
+        $('body').scrollspy({
+            target: '#myNavbar',
+            offset: 300
+        });
+
+        $('#myContainer12').scrollspy({
+            target: '#myNavbarB',
+            offset: 300
+        });
+    });
+</script>
+
+
+
+<!-- Scripts import ----------------->
+<script src="~/themes/MEDlight-Theme/Scripts/progressbar.js"></script>
+<script src="~/themes/MEDlight-Theme/Scripts/configurator-button.js"></script>
+
+
+
+<!-- Header Image ----------------->
+<div id="section1" class="container-fluid p-0">
+    <img class="img-fluid w-100 h-100"
+        src="http://328698.de.hosting.internet1.de/media/32/pagebuilder/produkte/exterior-studio-front_d1e46414dee65e0d743578a4860a40c177eb7301+Kopie.jpg"
+        alt="" />
+</div>
+
+
+
+<!-- Product Details ----------------->
+<div class="page product-details-page"  itemscope itemtype="http://schema.org/Product">
+    <zone name="productdetails_top" />
+
+
+    <article class="pd page-body">
+        <div id="main-update-container" class="update-container" data-url="@updateUrl" data-id="@Model.Id">
+            
+            <nav id="myNavbar" class="navbar navbar-light border-bottom border-top sticky-top">
+
+                <!-- Navbar ----------------->
+                <div class="container">
+                    <ul class="nav">
+                        <li class="nav-item">
+                            <a class="nav-link scrollspy-nav mr-3" href="#section1">N-LINE PRO</a>
+                        </li>
+                        <li class="nav-item mr-3">
+                            <a class="nav-link scrollspy-nav" href="#section2">Configuration</a>
+                        </li>
+                        <li class="nav-item mr-3">
+                            <a class="nav-link scrollspy-nav" href="#section3">Specifications</a>
+                        </li>
+                    </ul>
+                    <div class="nav-item ">
+
+                        <button id="nav-quote-button" class="btn btn-primary btn-lg" href="">
+                            <div class="btn-normal">Get your Quote</div>
+                            <div class="btn-alt">Send Configuration</div>
+                        </button>
+
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Product Intro ----------------->
+            <div class="container my-5">
+                <h2 class="h6 mt-2 p-0 text-primary font-weight-bold">@D.Get("root.header.category")</h2>
+                <hr class="m-0 divider-2 bg-primary">
+            </div>
+
+            <div class="container mb-5">
+                <div class="row">
+
+                    <div class="col-lg-8 mb-5">
+                        <h1 class="">
+                            <span>@D.Get("root.header.title")</span><span class="text-black-50">
+                                @D.Get("root.header.subtitle")
+                            </span></h1>
+                        <p class="text-black-50">The safe and reliable system is designed for practices where workflow
+                            optimization is key. The N-LINE pro is
+                            equipped with the latest technology. It uses 40 powerful UV lamps to reduce treatment times.
+                            A shorter cycle time can improve patient
+                            and staff satisfaction. You can also treat more patients in the same amount of time.</p>
+                    </div>
+                    <!-- Product Call Us ----------------->
+                    <div class="col-lg-4 mb-5" data-aos="fade-up" data-aos-once="true">
+                        <div class="card bg-accent2 shadow-sm">
+                            <div class="card-body">
+                                <h2 class="card-title">Let's Talk</h2>
+                                <p class="card-text">Do you have questions? Our MEDlight specialists are here to help, and it's
+                                    absolutely free. Start the conversation today.</p>
+                                <div class="d-flex flex-wrap">
+                                    <a class="btn pl-0" href="tel:+495221994290" aria-label="Call MEDlight specialists">
+                                        <i class="fa-solid fa-message mr-2"></i>+49 5221 994 29 0
+                                    </a>
+                                    <a class="btn pl-0" href="mailto:INFO@MEDLIGHT.EU" aria-label="Email MEDlight specialists">
+                                        <i class="fa-solid fa-envelope mr-2"></i>info@medlight.eu
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="w-100 mb-3">
+
+                </div>
+            </div>          
+
+            <!-- Product Hero Features ----------------->
+            <div class="container mb-5">
+                <div class="row mb-5">
+                    <div class="col-md-8 col-xl-6 text-center mx-auto">
+                        <h2>Technologies</h2>
+                        <p class="w-lg-50">Discover our state of the art technologies that make the N-LINE the best uv
+                            phototherapy cabin</p>
+                    </div>
+                </div>
+                <div class="row p-3 p-sm-0">
+                    <div class="col-12 col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="0">
+                        <div class="d-flex">
+                            <div class="bg-accent2 p-3 rounded mb-auto">
+                                <img style="height:2.5rem;"
+                                    src="http://328698.de.hosting.internet1.de/media/28/pagebuilder/icons/DoseSense.svg">
+                            </div>
+                            <div class="px-3">
+                                <h4>Dose Sense</h4>
+                                <p>Advanced sensors continuously monitor the UV output and provide real-time dosage
+                                    calculations.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="50">
+                        <div class="d-flex">
+                            <div class="bg-accent2 p-3 rounded mb-auto">
+                                <img style="height:2.5rem;"
+                                    src="http://328698.de.hosting.internet1.de/media/30/pagebuilder/icons/ARC-Concept.svg">
+                            </div>
+                            <div class="px-3">
+                                <h4>ARC-Concept</h4>
+                                <p class="w-lg-50">The curved lamp arrangement is based on the human body and ensures a
+                                    uniform
+                                    distance to the skin.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="d-flex">
+                            <div class="bg-accent2 p-3 rounded mb-auto">
+                                <img style="height:2.5rem;"
+                                    src="http://328698.de.hosting.internet1.de/media/27/pagebuilder/icons/CleanFlow.svg">
+                            </div>
+                            <div class="px-3">
+                                <h4>Clean Flow</h4>
+                                <p>By channeling air through carefully engineered pathways, we reduce dust particles
+                                    inside the
+                                    equipment.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="150">
+                        <div class="d-flex">
+                            <div class="bg-accent2 p-3 rounded mb-auto">
+                                <img style="height:2.5rem;"
+                                    src="http://328698.de.hosting.internet1.de/media/24/pagebuilder/icons/CrystalClearShield.svg">
+                            </div>
+                            <div class="px-3">
+                                <h4>Crystal Clear Shield</h4>
+                                <p>The advanced polymer protects the lamps from dirt and damage while transmitting the
+                                    UV light
+                                    unhindered.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                        <div class="d-flex">
+                            <div class="bg-accent2 p-3 rounded mb-auto">
+                                <img style="height:2.5rem;"
+                                    src="http://328698.de.hosting.internet1.de/media/26/pagebuilder/icons/LowNoise.svg">
+                            </div>
+                            <div class="px-3">
+                                <h4>Whisper Cool</h4>
+                                <p>The high-efficiency fan array maximizes the lamp's life and performance without
+                                    interfering
+                                    with your work.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 mb-4" data-aos="fade-up" data-aos-delay="2000">
+                        <div class="d-flex">
+                            <div class="bg-accent2 p-3 rounded mb-auto">
+                                <img style="height:2.5rem;"
+                                    src="http://328698.de.hosting.internet1.de/media/25/pagebuilder/icons/ReflexPro.svg">
+                            </div>
+                            <div class="px-3">
+                                <h4>Reflex Pro</h4>
+                                <p>The advanced polymer protects the lamps from dirt and damage while transmitting the
+                                    UV light
+                                    unhindered.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+         
+
+            <!-- Product Compare  Animations----------------->
+            <script src="/Themes/MEDlight-Theme/Scripts/snap.svg-min.js"></script>
+            <script src="/Themes/MEDlight-Theme/Scripts/lampcomparegraph.js"></script>
+            <div class="container-fluid p-0 bg-accent1 py-5"> 
+                <div class="container d-flex flex-wrap">
+                    <div class="container row">
+                        <div class="col-12 col-md-6 ">
+                            <div class="divider-3 bg-black my-3"></div>
+                            <h2 class="">2M EcoFlex amplifies your lamps. </h2>
+                            <p class="h5 mb-3 text-black-50">Maximizing the potential of standard-length
+                                lamps for patients up to 200cm. Sustainable technology that cares for patients and the
+                                planet.</p>
+                        
+                        </div>
+                    </div>
+                    <div class="chart col-12 col-md-6 pl-0" id="graph-1-container">
+                        <div class="position-absolute">
+                            <div><span class="display-3 ">15</span><span style="font-size:calc(1.25rem + 1.6vw);">%</span></div>
+                            <p class="small m-0">Possible savings</p>
+                            <p class="small">against 200cm lamps</p>
+                        </div>
+                        <div class="chart-svg">
+                            <svg class="chart-line" id="chart-1" viewBox="0 0 80 40">
+                                <defs>
+                                    <clipPath id="clip" x="0" y="0" width="80" height="40">
+                                        <rect id="clip-rect" x="-80" y="0" width="77" height="38.7" />
+                                    </clipPath>
+                                    <linearGradient id="line-gradient-1">
+                                        <stop offset="0" stop-color="#d83a85" />
+                                        <stop offset="100" stop-color="#d83a49" />
+                                    </linearGradient>
+                                    <linearGradient id="line-gradient-2">
+                                        <stop offset="0" stop-color="#3a90d8" />
+                                        <stop offset="100" stop-color="#40ffa3" />
+                                    </linearGradient>
+                                    <linearGradient id="bg-gradient-2" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0" stop-color="rgba(64, 255, 163, 1)" stop-opacity="0.57" />
+                                        <stop offset="0.9" stop-color="rgba(255, 255, 255, 1)" stop-opacity="0.0" />
+                                        <stop offset="1" stop-color="rgba(255, 255, 255, 1)" stop-opacity="0" />
+                                    </linearGradient>
+                                    <linearGradient id="bg-gradient-1" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0" stop-color="rgba(255, 0, 0, 1)" stop-opacity="0.2" />
+                                        <stop offset="0.25" stop-color="rgba(255, 255, 255, 1)" stop-opacity="0.2" />
+                                        <stop offset="1" stop-color="rgba(255, 255, 255, 1)" stop-opacity="0" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <p class="h5 text-center">Estimated running costs over time.</p>
+                        </div>
+                    </div>
+                    <div class="d-md-none my-3 divider-1"></div> 
+                    <div class="col-12 col-md-6 row">
+                        <div class="container d-flex flex-nowrap justify-content-center gap-2 py-2">
+                            <img class="img-fluid fit-contain mt-auto py-2"
+                                src="/themes/medlight-theme/images/produkte/N-LINEpro/N-LINE_Animation_Lamps_001.gif"
+                                style="max-height: 200px;" alt="">
+                            <div class=" mt-auto">
+                                <div class="mt-auto mr-auto" style="">
+                                    <div class=""><span class="display-3 ">2</span><span style="font-size:calc(1.25rem + 1.6vw);">m</span></div>
+                                    <p class="small m-0">Treament for</p>
+                                    <p class="small">tall patients</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="h5 text-center col-12 mt-auto">Optimised lamp arrangement.</p>
+                    </div>
+                </div>
+            </div>            
+
+            <!-- Product Skindex ----------------->
+            <div class="position-relative  margin-img2 bg-accent2">
+                <div class="container position-relative py-5">
+                    <div class="col-md-8 mx-auto text-center">
+                        <h2 class="display-4 bold mb-4">CONNECT WITH SKINDEX</h2>
+                        <p class="text-black-50 mb-2">SKINdex is MEDlights propriety treatment management software.
+                            Combine data collection, therapy planning, and cabin operation into a single system.</p>
+                    </div>
+                    <div class="row my-5">
+                        <div class="col-md-5 mx-auto" data-aos="fade-right">
+                            <img class="img-fluid" src="/Themes/MEDlight-Theme/Images/skindex/skindex_display.png"
+                                alt="">
+                            <img class="skindex-gif-container fit-contain"
+                                src="/Themes/MEDlight-Theme/Images/skindex/skindex.gif" alt="">
+                        </div>
+                        <div class="col-md-7 mx-auto text-center">
+                            <div class="my-4">
+                                <h3 class="display-5 mb-1">Remote Control</h3>
+                                <p class="text-black-50">Control up to seperate systems remotely</p>
+                            </div>
+                            <div class="my-4">
+                                <h3 class="display-5 mb-1">Intercom/Video</h3>
+                                <p class="text-black-50">Commonicate via your control station</p>
+                            </div>
+                            <div class="my-4">
+                                <h3 class="display-5 mb-1">Therapy Planning</h3>
+                                <p class="text-black-50">Create automated treatment plans</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-black-50 small text-center">*SKINdex requires a N-LINE PRO or N-LINE PRO MAX</p>
+                </div>
+            </div>  
+
+            <!-- Product Info Double Picture ----------------->
+            <div class="w-100 container-fluid bg-accent1 py-5 p-0">
+                <div class="container d-flex flex-wrap">
+                    <img class="col-6 fit-contain pl-0"
+                        src="//328698.de.hosting.internet1.de/media/40/pagebuilder/produkte/1603810938-ps2ebatteryopen-0200-1-1.jpg"
+                        loading="lazy">
+                    <img class="col-6 pr-0 fit-contain"
+                        src="//328698.de.hosting.internet1.de/media/39/pagebuilder/produkte/1603379328-packshotmulti.jpg"
+                        loading="lazy">
+                    <h2 class="mt-3">Certified medical Devices</h2>
+                    <p class="mb-0 textColumn-2">Advanced sensors continuously monitor the UV output and provide
+                        real-time dosage
+                        calculations, down to the second. Dose Sense makes treatment reliable regardless of variables,
+                        such as lamp condition or voltage. Intelligent placement allows 1.8m lamps to treat patient up
+                        to 2m.</p>
+                </div>
+            </div>
+
+            <!-- Product Slider ----------------->
+            <div id="carouselProduct" class="carousel slide" data-ride="carousel" data-interval="5000">
+                <ol class="carousel-indicators ">
+                    <li data-target="#carouselProduct" data-slide-to="0" class="active"></li>
+                    <li data-target="#carouselProduct" data-slide-to="1" class=""></li>
+                    <li data-target="#carouselProduct" data-slide-to="2" class=""></li>
+                </ol>
+                <div class="carousel-inner bg-accent2" style="height:30rem">
+                    <!-- Carousel Item ----------------->
+                    <div class="carousel-item h-100 active">
+                        <img class="col-12 col-md-6 position-absolute h-100 fit-cover img-fluid p-0" alt="First slide"
+                            src="/themes/medlight-theme/images/produkte/N-LINEpro/N-Line-pro_notfall.jpg"
+                            data-holder-rendered="true">
+                        <div class="carousel-image-overlay"></div>
+                        <div class="row container h-100 mx-auto p-0 justify-content-end">
+                            <div class="carousel-info col-12 col-md-6 row d-flex align-content-end pb-5">
+                                <h2 class="display-7">Energy-dense, fade-free power </h2>
+                                <p class="">Advanced 10-cell lithium-ion battery delivers long-lasting,
+                                    powerful
+                                    suction¹. Weighing 3.5kg, the Dyson Gen5detect™ vacuum has two more cells
+                                    than the
+                                    Dyson V15 detect™
+                                    vacuum, to run at a higher voltage and create more power. </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carousel Item ----------------->
+                    <div class="carousel-item h-100 ">
+                        <img class="col-12 col-md-6 position-absolute h-100 fit-cover img-fluid p-0" alt="First slide"
+                            src="/themes/medlight-theme/images/produkte/N-LINEpro/N-Line-pro_notfall.jpg"
+                            data-holder-rendered="true">
+                        <div class="carousel-image-overlay"></div>
+                        <div class="row container h-100 mx-auto p-0 justify-content-end">
+                            <div class="carousel-info col-12 col-md-6 row d-flex align-content-end pb-5">
+                                <h2 class="display-7">Energy-dense, fade-free power </h2>
+                                <p class="">Advanced 10-cell lithium-ion battery delivers long-lasting,
+                                    powerful
+                                    suction¹. Weighing 3.5kg, the Dyson Gen5detect™ vacuum has two more cells
+                                    than the
+                                    Dyson V15 detect™
+                                    vacuum, to run at a higher voltage and create more power. </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carousel Item ----------------->
+                    <div class="carousel-item h-100">
+                        <img class="col-12 col-md-6 position-absolute h-100 fit-cover img-fluid p-0" alt="First slide"
+                            src="/themes/medlight-theme/images/produkte/N-LINEpro/N-Line-pro_notfall.jpg"
+                            data-holder-rendered="true">
+                        <div class="carousel-image-overlay"></div>
+                        <div class="row container h-100 mx-auto p-0 justify-content-end">
+                            <div class="carousel-info col-12 col-md-6 row d-flex align-content-end pb-5">
+                                <h2 class="display-7">Energy-dense, fade-free power </h2>
+                                <p class="">Advanced 10-cell lithium-ion battery delivers long-lasting,
+                                    powerful
+                                    suction¹. Weighing 3.5kg, the Dyson Gen5detect™ vacuum has two more cells
+                                    than the
+                                    Dyson V15 detect™
+                                    vacuum, to run at a higher voltage and create more power. </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <a class="carousel-control-prev" href="#carouselProduct" role="button" data-slide="prev">
+                    <span class="chevron-icon carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselProduct" role="button" data-slide="next">
+                    <span class="chevron-icon carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+
+            <!-- All Features Collapse -->
+            <div class="container-fluid bg-accent2 py-3">
+                <div class="container  p-0">
+                    <div class="container py-5">
+                        <div class="row container p-0">
+                            <div class="col-12 col-md-6">
+                                <h2 class="display-4"> Discover the difference</h2>
+                                <p>The N-LINE System is designed to meet your specific
+                                    requirements. All models share a common foundation, boasting our unique core design
+                                    along with
+                                    all essential safety features.</p>
+                                <button class="btn-collapse collapsed my-3" type="button" data-toggle="collapse"
+                                    data-target="#collapseFeatures">
+                                    <p class="btn-label">Show all Features
+                                    <p>
+                                        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="1">
+                                            <path d="M5 10l7-7 7 7m-7-7v12" transform="rotate(45, 12, 12)"></path>
+                                        </svg>
+                                </button>
+                            </div>
+                            <i class="col-12 col-md-6 p-2 my-auto text-center fa-solid fa-circle-arrow-down"
+                                style="font-size: 4rem;"></i>
+                        </div>
+                    </div>
+
+                    <div class="collapse feature-cards" id="collapseFeatures">
+                        <div class="container card-columns p-0">
+                            <!-- Feature: MEDlight ARC-Concept -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">ARC-Concept</h5>
+                                    <p class="card-text small">All lamps are arranged on a curve to concentrate the
+                                        light
+                                        where it is needed. The ARC-Concept provides excellent exposure to the lower
+                                        extremities while allowing the treatment of even taller patients (2 meters).</p>
+                                </div>
+                            </div>
+                            <!-- Feature: 2M EcoFlex -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">2M EcoFlex</h5>
+                                    <p class="card-text small">Intelligent placement allows 1.8m lamps to effectively
+                                        perform as 2m lamps without wasting energy. This enables treatment for taller
+                                        patients while embracing eco-friendliness and offering long-term cost savings
+                                        with
+                                        standard length lamps.</p>
+                                </div>
+                            </div>
+                            <!-- Feature: 2M EcoFlex -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">2M EcoFlex</h5>
+                                    <p class="card-text small">The design is based on the human body. The result is a
+                                        uniform distance to the skin which prevents under- and over-exposure.
+                                        Additionally,
+                                        the effective lamp setup reduces treatment times.</p>
+                                </div>
+                            </div>
+                            <!-- Feature: Heavy Duty Use -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Heavy Duty Use</h5>
+                                    <p class="card-text small">The N-LINE series is for professionals where reliability
+                                        and
+                                        durability matter. The galvanized steel body and door with powder coating are
+                                        constructed for long-term use.</p>
+                                </div>
+                            </div>
+                            <!-- Feature: Convenient -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Convenient</h5>
+                                    <p class="card-text small">The bottom platform and lamp shielding are made of
+                                        medical-grade materials that can be removed for easy cleaning and disinfection.
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- Feature: Acrylic Shielding -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Acrylic Shielding</h5>
+                                    <p class="card-text small">The crystal-clear acrylic shielding protects the lamps
+                                        from
+                                        dirt and damage. UV light passes through the shield unhindered. Cleaning or
+                                        surface
+                                        disinfection is quick and easy.</p>
+                                </div>
+                            </div>
+                            <!-- Feature: Reflective Space Extension Panels (ReflexPro) -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Reflective Space Extension Panels (ReflexPro)</h5>
+                                    <p class="card-text small">Reflective back panels direct the UV light at the user,
+                                        maximizing lamp efficiency and allows for shorter treatments. Simultaneously,
+                                        the
+                                        panels visually increase the cabin space.</p>
+                                </div>
+                            </div>
+                            <!-- Feature: Electronic Starters -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Electronic Starters</h5>
+                                    <p class="card-text small">Despite its compact size, every lamp uses electronic
+                                        starters. Users benefit from reduced energy consumption and increased service
+                                        life
+                                        of the lamps.</p>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Smooth Air Technology</h5>
+                                    <p class="card-text small">Smooth Air Technology (SAT) - Cooling is important
+                                        because it
+                                        helps to maintain the optimal temperature for the lamp to operate efficiently
+                                        and
+                                        effectively. If the lamp is too hot, it can result in shortened lamp life and
+                                        reduced UV output. The temperature management system maximizes service life and
+                                        performance.</p>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Low Noise</h5>
+                                    <p class="card-text small">Premium cooling fans with advanced fluid-dynamic bearings
+                                        keep the cabin at an unobtrusive volume level and make communication easier.</p>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Dust Reduction System (DRS)</h5>
+                                    <p class="card-text small">The overhead air intake keeps dust and dirt particles out
+                                        of
+                                        the system to maintain the maximum performance of the UV lamps.</p>
+                                </div>
+                            </div>
+                            <!-- Feature: Open Cabin Design -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Open Cabin Design</h5>
+                                    <p class="card-text small">The open top prevents patients from feeling confined,
+                                        while
+                                        the UV reflectors (RSEP) act as mirrors inside the cabin. Patients enjoy the
+                                        perception of a more spacious and well-ventilated environment.</p>
+                                </div>
+                            </div>
+                            <!-- Feature: Ergonomic -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="divider-2"></div>
+                                    <h5 class="card-title bold">Ergonomic</h5>
+                                    <p class="card-text small">Well-placed handle grips keep patients stable and in the
+                                        optimal treatment position.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="container ">
+                <div class="row my-5">
+                    <img class="col-12 col-lg-6 mb-auto pb-3 img-fluid fit-cover" style="max-height: 30rem;"
+                        src="/themes/medlight-theme/images/carolina-heza-zwPYmB1GlNE-unsplash.jpg" loading="lazy">
+                    <div class="col-12 col-lg-6">
+                        <div class="divider-3 bg-primary mb-3"></div>
+                        <div>
+                            <p>UV phototherapy, also known as light therapy, is a common form of treatment that uses,
+                                ultraviolet light on exposed skin to treat
+                                several types of skin condition. The choice of spectrum and treatment parameters should
+                                be
+                                determined by a healthcare professional based
+                                on individual needs and considerations.</p>
+                        </div>
+                        <div>
+                            <h6 class="bold mb-0">UVB-311nm (Narrowband)</h6>
+                            <p class="small">Psoriasis • Parapsoriasis • Vitiligo • Atopic Dermatitis • Mycosis
+                                fungoides •
+                                Other skin diseases</p>
+                        </div>
+                        <div>
+                            <h6 class="bold mb-0">UVB (Broadband)</h6>
+                            <p class="small">Psoriasis • Parapsoriasis • Vitiligo • Atopic Dermatitis • Mycosis
+                                fungoides •
+                                Other skin diseases</p>
+                        </div>
+                        <div>
+                            <h6 class="bold mb-0">UVA (including PUVA)</h6>
+                            <p class="small">Psoriasis • Parapsoriasis • Vitiligo • Atopic Dermatitis • Mycosis
+                                fungoides</p>
+                        </div>
+                        <div>
+                            <h6 class="bold mb-0">UVA-1</h6>
+                            <p class="small">Atopic dermatitis • Mycosis fungoides</p>
+                        </div>
+                        <div>
+                            <p class="small"><em>Please note that the information provided on this website should not be
+                                    considered medical advice. For treatment
+                                    recommendations andpersonalized care, we encourage patients to consult qualified
+                                    healthcare
+                                    professionals.</em></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Featurebox ----------------->
+            <script src="/themes/medlight-theme/scripts/featureBox.js"></script>
+            <div class="container-fluid bg-accent2 py-3">
+                <div class="container">
+                    <h2 class="display-4 col-12 text-center">Discover our most advanced phototherapy system</h2>
+                    <div id="featureBox" class="row my-3 col-lg-8 mx-auto" data-aos="fade">
+                        <div class="col-lg-6 image-container mx-auto p-3" style="max-height: 40rem;">
+                            <img class="background-image fit-contain"
+                                src="/themes/medlight-theme/images\Produkte\N-LINEpro\MEDlight_N-LINE-Pro-10_A3 Kopie.png"
+                                alt="Background Image">
+                            <div class="featureBox-input active shadow-sm" id="feature1" name="featureBox-group"
+                                value="option1" style="top: 36%; left: 69%;">
+                                <i class="circle fa-regular fa-circle"></i>
+                                <i class="fas fa-plus plus"></i>
+                            </div>
+                            <div class="featureBox-input shadow-sm" id="feature2" name="featureBox-group"
+                                value="option2" style="top: 31%; left: 31%;">
+                                <i class="circle fa-regular fa-circle"></i>
+                                <i class="fas fa-plus plus"></i>
+                            </div>
+                            <div class="featureBox-input shadow-sm" id="feature3" name="featureBox-group"
+                                value="option2" style="top: 2%; left: 34%;">
+                                <i class="circle fa-regular fa-circle"></i>
+                                <i class="fas fa-plus plus"></i>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 info-box bg-white col mx-auto bg-accent2 border p-3 shadow-sm rounded"
+                            style="min-height:10rem;">
+                            <div class="featureBox-label" for="feature1">
+                                <h5 class="bold">Key Lock</h5>
+                                <p>Key lock for safety and stuff.</p>
+                            </div>
+                            <div class="featureBox-label" for="feature2">
+                                <h5 class="bold">Touchscreen</h5>
+                                <p>A great touchscreen the best of the best.</p>
+                            </div>
+                            <div class="featureBox-label" for="feature3">
+                                <h5 class="bold">Active Patient Comfort Cooling</h5>
+                                <p>Keeps the patient a the greeatest temperature management.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- Product Philips Branding ----------------->
+            <div class="container-fluid p-0">
+                <div class="container my-5">
+                    <div class="col-10 mx-auto">
+                        <div class="card shadow-sm">
+                            <div class="row card-body m-0 p-0">
+                                <div class="col-8 p-3">
+                                    <h4>We use Philips Lighting phototherapy lamps</h4>
+                                    <p>More than 400 independent clinical studies have proven that the UVB Narrowband
+                                        treatment is
+                                        safer and more effective than any other treatment in its class.</p>
+                                </div>
+                                <img class="col-4 fit-contain philips-background"
+                                    src="/themes/medlight-theme/images/PhilipsLighting_logo.png"
+                                    alt="Philips Lighting Logo" title="Philips Lighting Logo" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            <!-- Product Configuration ----------------->
+            <form id="section2" class="" asp-route="Product" asp-route-SeName="@Model.SeName"
+                method="post" id="pd-form">
+
+                <div class="container-fluid bg-accent2 py-5 mb-5">
+                    <div class="container text-center">
+                        <h1 class="display-4 mb-3">Design your N-LINE system</h1>
+                        <p class="text-center">Select your desired options below to personalize your device. In the next step, you can request your tailored offer.</p>
+                    </div>
+                </div>
+
+
+                <!-- Configurator model radio ------------------------>
+
+                
+                <div class="d-flex flex-nowrap align-items-center my-3">
+                    <hr class="bg-accent3 w-100">
+                        <h2 class="text-center text-nowrap  my-0">Choose your model</h2>
+                    <hr class="bg-accent3 w-100">
+                </div>
+
+                <div class="container mb-3">
+                    <p class="text-center">Each model is designed to meet specific requirements.
+                        All models share a
+                        common foundation, boasting our unique core design along with all essential safety features.
+                    </p>
+                </div>
+
+                @Html.Partial("_myslider")
+
+                <div class="container row no-gutters p-0 mx-auto">
+                    <!-- Spacer Required -->
+                    <div class="col-1 mx-0 p-0"></div>
+
+                    <div class="col-10">
+
+                        <!-- Configurator spectrum radio ------------------------>
+                        <h2 class="text-center mt-5 mb-1">Choose your spectrum</h2>
+                        <div id="config-radio-spectrum" class="list-group col-10 container mx-auto my-3 p-2"
+                            style="max-width: 40rem;">
+                            <label class=" form-check mb-3 p-3 d-flex">
+                                <div class="row flex-grow-1">
+                                    <div class="col-12 col-md-4 my-auto text-center text-md-left">
+                                        <h4 class="mb-0 bold">UVB 311nm (Narrowband)</h4>
+                                        <p class="mb-0 small">PHILIPS Lighting</p>
+                                    </div>
+                                    <div
+                                        class="col-12 col-md-6 d-flex mx-auto gx-5 my-3 justify-content-center gap-2 ">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/50/pagebuilder/icons/icon12_lamps3.svg"
+                                                alt="Icon 1" width="16">
+                                            <p class="mb-0 small">40x</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/46/pagebuilder/icons/icon12_power.svg"
+                                                alt="Icon 2" width="16">
+                                            <p class="mb-0 small">100W</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/47/pagebuilder/icons/icon12_size.svg"
+                                                alt="Icon 3" width="16">
+                                            <p class="mb-0 small">180cm</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/48/pagebuilder/icons/icon12_spectrum.svg"
+                                                alt="Icon 4" width="16">
+                                            <p class="mb-0 small text-nowrap">311nm</p>
+                                        </div>
+                                    </div>
+                                    <input class="position-relative form-check-input m-auto ml-md-auto mr-md-3"
+                                        type="radio" name="flexRadioDefault2" id="configSpectrumRadio1" checked
+                                        value="UVB-311nm" />
+                                    <div class="radio-box"></div>
+                                </div>
+                            </label>
+
+                            <label class="form-check mb-3 p-3 d-flex">
+                                <div class="row flex-grow-1">
+                                    <div class="col-12 col-md-4 my-auto text-center text-md-left">
+                                        <h4 class="mb-0 bold">UVB (Broadband)</h4>
+                                        <p class="mb-0 small">PHILIPS Lighting</p>
+                                    </div>
+                                    <div class="col-12 col-md-6 d-flex mx-auto my-3 justify-content-center">
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/50/pagebuilder/icons/icon12_lamps3.svg"
+                                                alt="Icon 1" width="16">
+                                            <p class="mb-0 small">40x</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/46/pagebuilder/icons/icon12_power.svg"
+                                                alt="Icon 2" width="16">
+                                            <p class="mb-0 small">100W</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/47/pagebuilder/icons/icon12_size.svg"
+                                                alt="Icon 3" width="16">
+                                            <p class="mb-0 small">180cm</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/48/pagebuilder/icons/icon12_spectrum.svg"
+                                                alt="Icon 4" width="16">
+                                            <p class="mb-0 small text-nowrap">UVB</p>
+                                        </div>
+                                    </div>
+                                    <input class="position-relative form-check-input m-auto ml-md-auto mr-md-3"
+                                        type="radio" name="flexRadioDefault2" id="configSpectrumRadio2"
+                                        value="UVB Broadband" />
+                                    <div class="radio-box"></div>
+                                </div>
+                            </label>
+
+                            <label class="form-check mb-3 p-3 d-flex">
+                                <div class="row flex-grow-1">
+                                    <div class="col-12 col-md-4 my-auto text-center text-md-left">
+                                        <h4 class="mb-0 bold">UVA-1</h4>
+                                        <p class="mb-0 small">PHILIPS Lighting</p>
+                                    </div>
+                                    <div class="col-12 col-md-6 d-flex mx-auto my-3 justify-content-center">
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/50/pagebuilder/icons/icon12_lamps3.svg"
+                                                alt="Icon 1" width="16">
+                                            <p class="mb-0 small">40x</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/46/pagebuilder/icons/icon12_power.svg"
+                                                alt="Icon 2" width="16">
+                                            <p class="mb-0 small">100W</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/47/pagebuilder/icons/icon12_size.svg"
+                                                alt="Icon 3" width="16">
+                                            <p class="mb-0 small">180cm</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/48/pagebuilder/icons/icon12_spectrum.svg"
+                                                alt="Icon 4" width="16">
+                                            <p class="mb-0 small text-nowrap">UVA-1</p>
+                                        </div>
+                                    </div>
+                                    <input class="position-relative form-check-input m-auto ml-md-auto mr-md-3"
+                                        type="radio" name="flexRadioDefault2" id="configSpectrumRadio3"
+                                        value="UVA-1" />
+                                    <div class="radio-box"></div>
+                                </div>
+                            </label>
+
+                            <label class="form-check mb-3 p-3 d-flex">
+                                <div class="row flex-grow-1">
+                                    <div class="col-12 col-md-4 my-auto text-center text-md-left">
+                                        <h4 class="mb-0 bold">UVA (PUVA)</h4>
+                                        <p class="mb-0 small">PHILIPS Lighting</p>
+                                    </div>
+                                    <div class="col-12 col-md-6 d-flex mx-auto my-3 justify-content-center">
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/50/pagebuilder/icons/icon12_lamps3.svg"
+                                                alt="Icon 1" width="16">
+                                            <p class="mb-0 small">40x</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/46/pagebuilder/icons/icon12_power.svg"
+                                                alt="Icon 2" width="16">
+                                            <p class="mb-0 small">100W</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/47/pagebuilder/icons/icon12_size.svg"
+                                                alt="Icon 3" width="16">
+                                            <p class="mb-0 small">180cm</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/48/pagebuilder/icons/icon12_spectrum.svg"
+                                                alt="Icon 4" width="16">
+                                            <p class="mb-0 small text-nowrap">UVA</p>
+                                        </div>
+                                    </div>
+                                    <input class="position-relative form-check-input m-auto ml-md-auto mr-md-3"
+                                        type="radio" name="flexRadioDefault2" id="configSpectrumRadio4"
+                                        value="UVA" />
+                                    <div class="radio-box"></div>
+                                </div>
+                            </label>
+
+                            <label class="form-check mb-3 p-3 d-flex">
+                                <div class="row flex-grow-1">
+                                    <div class="col-12 col-md-4 my-auto text-center text-md-left">
+                                        <h4 class="mb-0 bold">Mixed Spectrum</h4>
+                                        <p class="mb-0 small">Install two different types</p>
+                                    </div>
+                                    <div class="col-12 col-md-6 d-flex mx-auto my-3 justify-content-center">
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/50/pagebuilder/icons/icon12_lamps3.svg"
+                                                alt="Icon 1" width="16">
+                                            <p class="mb-0 small text-nowrap">20x / 20x</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/46/pagebuilder/icons/icon12_power.svg"
+                                                alt="Icon 2" width="16">
+                                            <p class="mb-0 small">100W</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/47/pagebuilder/icons/icon12_size.svg"
+                                                alt="Icon 3" width="16">
+                                            <p class="mb-0 small">180cm</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-center mx-3">
+                                            <img class=""
+                                                src="http://328698.de.hosting.internet1.de/media/48/pagebuilder/icons/icon12_spectrum.svg"
+                                                alt="Icon 4" width="16">
+                                            <p class="mb-0 small text-nowrap">Mixed</p>
+                                        </div>
+                                    </div>
+                                    <input class="position-relative form-check-input m-auto ml-md-auto mr-md-3"
+                                        type="radio" name="flexRadioDefault2" id="configSpectrumRadio5"
+                                        value="Mixed Spectrum" />
+                                    <div class="radio-box"></div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Configurator SKINdex info/checkbox------------------------>
+                        <h2 class="text-center mt-5 mb-1">Add SKINdex</h2>
+                        <div id="config-checkbox-skindex" class="list-group d-flex col-10 mx-auto my-3 p-2"
+                            style="max-width: 40rem;">
+                            <label class="form-checkbox container mb-3 p-0">
+                                <input class="d-none" type="checkbox" aria-label="Checkbox: Add MEDlight Service+"
+                                    value="SKINdex">
+                                <div class="container p-0 m-0">
+                                    <div class="row container m-0 p-0">
+                                        <img class="col col-4 p-0 border-right img-fluid fit-contain"
+                                            src="/themes/medlight-theme/images/skindex.jpg" />
+                                        <div class="col col-8 p-3">
+                                            <h4 class="">MEDlight SKINdex</h4>
+                                            <p class="small">Optimize your product package with MEDlight Service+.
+                                                Benefit from an automatic warranty extension plan, coupled with
+                                                access to
+                                                top-tier technical support from the people who made it.</p>
+                                            <a class="" href="#">Learn More</a>
+                                        </div>
+                                    </div>
+                                    <div type="button" role="button"
+                                        class="checkbox-button text-center p-2 border-top">
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Configurator Services checkbox------------------------>
+                        <h2 class="text-center mt-5 mb-1">Add Services</h2>
+                        <div id="config-checkbox-services" class="list-group d-flex col-10 mx-auto my-3 p-2"
+                            style="max-width: 40rem;">
+
+                            <label class="form-checkbox container mb-3 p-0">
+                                <input class="d-none" type="checkbox" aria-label="Checkbox: Add MEDlight Service+"
+                                    value="MEDlight Service+">
+                                <div class="container p-0 m-0">
+                                    <div class="row container m-0 p-0">
+                                        <img class="col col-4 p-0 border-right img-fluid fit-contain"
+                                            src="/themes/medlight-theme/images/istockphoto-1054927804-2048x2048.jpg" />
+                                        <div class="col col-8 p-3">
+                                            <h4 class="">MEDlight Service+</h4>
+                                            <p class="small">Optimize your product package with MEDlight Service+.
+                                                Benefit
+                                                from an automatic warranty extension plan, coupled with access to
+                                                top-tier
+                                                technical support from the people with unmatched familiarity with
+                                                your
+                                                devices.</p>
+                                            <a class="" href="#">Learn More</a>
+                                        </div>
+                                    </div>
+                                    <div type="button" role="button"
+                                        class="checkbox-button text-center p-2 border-top">
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="form-checkbox container mb-3 p-0">
+                                <input class="d-none" type="checkbox" aria-label="Checkbox: Add MEDlight Service+"
+                                    value="MEDlight Academy">
+                                <div class="container p-0 m-0">
+                                    <div class="row container m-0 p-0">
+                                        <img class="col col-4 p-0 border-right img-fluid fit-contain"
+                                            src="/themes/medlight-theme/images/istockphoto-1017946582-2048x2048.jpg" />
+                                        <div class="col col-8 p-3">
+                                            <h4 class="">MEDlight Academy</h4>
+                                            <p class="small">Are you interested in enrolling in MEDlight Academy?
+                                                Empower
+                                                your staff through precisely tailored training courses, curated by
+                                                MEDlight
+                                                to maximize the potential of your devices.</p>
+                                            <a class="" href="#">Learn More</a>
+                                        </div>
+                                    </div>
+                                    <div type="button" role="button"
+                                        class="checkbox-button text-center p-2 border-top">
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="form-checkbox container mb-3 p-0">
+                                <input class="d-none" type="checkbox" aria-label="Checkbox: Add MEDlight Service+"
+                                    value="MEDlight Service+">
+                                <div class="container p-0 m-0">
+                                    <div class="row container m-0 p-0">
+                                        <img class="col col-4 p-0 border-right img-fluid fit-contain"
+                                            src="/themes/medlight-theme/images/istockphoto-1054927796-2048x2048.jpg" />
+                                        <div class="col col-8 p-3">
+                                            <h4 class="">Global Connect</h4>
+                                            <p class="small">Tailor your product for global markets: customized
+                                                language
+                                                options, regulatory compliance, and power supply adaptation to meet
+                                                diverse
+                                                country requirements.</p>
+                                            <a class="" href="#">Learn More</a>
+                                        </div>
+                                    </div>
+                                    <div type="button" role="button"
+                                        class="checkbox-button text-center p-2 border-top">
+                                    </div>
+                                </div>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <!-- progress-bar -->
+                    <div id="configuration-progress-bar" class="col-1 mx-0 p-0">
+                        <div class="page-progress-v  mx-auto p-0 py-3" style="width:1.5rem;" data-aos="fade">
+                            <div class=" row mx-auto p-0 m-0 d-flex flex-column justify-content-center">
+                                <div id="configuration-progress-segment1"
+                                    class="mx-auto progress-segment circle-loader"
+                                    data-link="#config-radio-spectrum">
+                                    <div class="checkmark draw" data-link="#config-radio-spectrum"></div>
+                                </div>
+
+                                <div id="segment2-v" class="progress-v mx-auto progress-segment"
+                                    data-link="#config-checkbox-skindex">
+                                </div>
+                                <div class="mx-auto progress-segment circle-loader"
+                                    data-link="#config-checkbox-skindex">
+                                    <div class="checkmark draw" data-link="#config-checkbox-skindex"></div>
+                                </div>
+
+                                <div id="segment3-v" class="progress-v mx-auto progress-segment"
+                                    data-link="#config-checkbox-services">
+                                </div>
+                                <div class="mx-auto progress-segment circle-loader"
+                                    data-link="#config-checkbox-services">
+                                    <div class="checkmark draw" data-link="#config-checkbox-services"></div>
+                                </div>
+
+                                <div id="segment3-v" class="progress-v mx-auto progress-segment"
+                                    data-link="#config-button-submit">
+                                </div>
+                                <div class="mx-auto progress-segment circle-loader"
+                                    data-link="#config-button-submit">
+                                    <div class="checkmark draw" data-link="#config-button-submit"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- Configurator Submit Button------------------------>
+                <div id="config-button-submit" class="fullwidth  py-5 bg-accent1">
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <h1 class="mt-3 col-12  text-center">Send Configuration</h1>
+                            <h4 class="mb-3 col-12  text-center">Get a free quote from our sales team. Final price can be provided when your system design is completed.</h4>
+                            <button class="col-6 btn rounded my-3 px-5" style="min-width:18rem;" type="submit">Send
+                                Configuration</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+
+
+
+                <!-- FAQ ----------------->
+                <div class="container my-5">
+
+                    <div id="accordion-faq" class="col-12 col-xl-10 mx-auto">
+                        <h2 class="">Frequently asked questions</h2>
+                        <div class="card border-0">
+                            <a class="card-link card-header d-flex flex-nowrap bg-transparent border-0 p-0 collapsed"
+                                data-toggle="collapse" href="#collapseOne">
+                                <h3 class="display-8 text-dark my-3 p-0">Was ist eine UV Dosimetrie?</h3>
+                                <i class=" fas fa-chevron-down text-dark my-auto ml-auto"></i>
+                            </a>
+                            <div class="border-bottom w-100 m-0"></div>
+                            <div id="collapseOne" class="collapse" data-parent="#accordion-faq">
+                                <div class="card-body px-0">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+                                        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+                                        nostrud
+                                        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card border-0">
+                            <a class="card-link card-header d-flex flex-nowrap bg-transparent border-0 p-0 collapsed"
+                                data-toggle="collapse" href="#collapseTwo">
+                                <h3 class="display-8 text-dark my-3 p-0">Effizienz zahlt sich aus - weniger Röhen mehr
+                                    Erfolg?</h3>
+                                <i class=" fas fa-chevron-down text-dark my-auto ml-auto"></i>
+                            </a>
+                            <div class="border-bottom w-100 m-0"></div>
+                            <div id="collapseTwo" class="collapse" data-parent="#accordion-faq">
+                                <div class="card-body px-0">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+                                        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+                                        nostrud
+                                        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card border-0">
+                            <a class="card-link card-header d-flex flex-nowrap bg-transparent border-0 p-0 collapsed"
+                                data-toggle="collapse" href="#collapseThree">
+                                <h3 class="display-8 text-dark my-3 p-0">Die Unterschiede zwischen den Gerätetypen NLINE
+                                    & NLINEpro</h3>
+                                <i class=" fas fa-chevron-down text-dark my-auto ml-auto"></i>
+                            </a>
+                            <div class="border-bottom w-100 m-0"></div>
+                            <div id="collapseThree" class="collapse" data-parent="#accordion-faq">
+                                <div class="card-body px-0">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+                                        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+                                        nostrud
+                                        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+                <!-- Specifications ----------------->
+                <div class="container my-3">
+                    <div id="section3" class="container col-12 col-xl-10 mx-auto px-0">
+                        <h2 class="text-center my-5">Specifications</h2>
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <h3 style="margin-left: 0px; margin-right: 0px;" class="">Power</h3>
+                                    </td>
+                                    <td>
+                                        <p>Voltage<br>
+                                            <font color="#787878"> 400V / 50 hz</font>
+                                        </p>
+                                    </td>
+                                    <td>Power Consumption<br>
+                                        <font color="#787878"> 4900 VA</font>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <h3 style="margin-left: 0px; margin-right: 0px;">Dimensions</h3>
+                                    </td>
+                                    <td>
+                                        <p>Width<br>
+                                            <font color="#787878"> 121 cm</font>
+                                        </p>
+                                        <p>Height<br>
+                                            <font color="#787878"> 214 cm </font>
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p class="">Depth<br><span>
+                                                <font color="#787878">114 cm</font>
+                                            </span></p>
+                                        <p><span>Weight<br></span>
+                                            <font color="#787878">330 kg<br></font>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <h3 style="margin-left: 0px; margin-right: 0px;">Output</h3>
+                                    </td>
+                                    <td>40 x 100w<br>
+                                        <font color="#787878">Philips Lightning medical lamps</font>
+                                    </td>
+                                    <td>&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <h3 style="margin-left: 0px; margin-right: 0px;">Construction</h3>
+                                    </td>
+                                    <td>
+                                        <p>Powder coated steel frame<br>
+                                            <font color="#787878"> Durable, long term heavy use and easy cleaning</font>
+                                        </p>
+                                        <p>ARC-Concept<br>
+                                            <font color="#787878">Unique cabin layout and treatment for patients up to
+                                                2m
+                                            </font>
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p>Crystal Clear Shield<br>
+                                            <font color="#787878">Acrylic shielding</font>
+                                        </p>
+                                        <p>Reflex Pro<br>
+                                            <font color="#787878">Ultra reflective back panels</font>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <h3 style="margin-left: 0px; margin-right: 0px;">Cooling</h3>
+                                    </td>
+                                    <td>
+                                        <p>Whisper Cool<br>
+                                            <font color="#787878">Low-noise high-efficiency fan array</font>
+                                        </p>
+                                        <p>Clean Flow<br>
+                                            <font color="#787878">Dust reducing air-flow design</font><br>
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p>Active Comfort Flow<br>
+                                            <font color="#787878">Patient-controlled active patient cooling system
+                                            </font>
+                                        </p>
+                                        <p>Passive Comfort Flow<br>
+                                            <font color="#787878">Passive patient comfort cooling</font>
+                                            <font color="#787878"><br></font>
+                                        </p>
+                                        <p>
+                                            <font color="#787878"> </font>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <h3 style="margin-left: 0px; margin-right: 0px;">Safety</h3>
+                                    </td>
+                                    <td>
+                                        <p>UV-shielded observation window</p>
+                                        <p>Emergency shut-off button</p>
+                                        <p>Emergency call handle inside</p>
+                                        <p>Keylock</p>
+                                        <p>PIN authorization</p>
+                                    </td>
+                                    <td>
+                                        <p>Dose Sense<br>
+                                            <font color="#787878">Dosimetry with 4 x real-time sensors</font>
+                                        </p>
+                                        <p>Automatic door shut-off</p>
+                                        <p>Automated Voice Guide<br>
+                                            <font color="#787878"> multilanguage</font>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <h3 style="margin-left: 0px; margin-right: 0px;">Operation</h3>
+                                    </td>
+                                    <td>
+                                        <p><span>Touchscreen<br></span><span>8"-12"</span></p>
+                                        <p>User guided interface<br>
+                                            <font color="#787878">multilanguage</font><span
+                                                style="color: rgb(120, 120, 120);"><br></span>
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p><span>SKINdex<br></span><span style="color: rgb(120, 120, 120);">Operation
+                                                via
+                                                remote
+                                                terminal<br>Therapy
+                                                planning<br>Patient records</span></p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+
+                <div class="container">
+                    <div class="card">
+                        
+                        <div class="card-header bg-accent2"> 
+                            
+                            <h5 class="">Get help buying</h5>
+                        </div>
+                        <div class="card-body">
+                            
+                            
+                            <p class="card-text"><i class="fa-solid fa-message pr-2"></i> Have a question? Contact our Specialists</p>
+                            <div class="row d-flex">
+                                <div class="col-4">
+                                    <a class="text-center my-2" href="mailto:INFO@MEDLIGHT.EU" style="">
+                                      info@medlight.eu<i class="px-2 fa-solid fa-chevron-right"></i>
+                                      </a>
+                                </div>
+                                <div class="col-4">
+                                    <a class="text-center my-2" href="tel:+495221994290" style="">
+                                        Call +49 5221 994 29 0<i class="px-2 fa-solid fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+    </article>
+
+
+
+    @* TODO: (mc) find more intelligent way of rendering RecentlyViewedProducts globally *@
+    @await Component.InvokeAsync("RecentlyViewedProducts")
+    <zone name="productdetails_bottom" />
+</div>
+
+
+
