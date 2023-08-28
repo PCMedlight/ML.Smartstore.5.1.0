@@ -190,7 +190,6 @@ logs/
 [Ee]xternal[Ff]iles/
 /src/Smartstore.Modules/*-sym
 /test/*-sym
-/src/Smartstore.Web/Themes/*-sym
 
 
 # =========================
