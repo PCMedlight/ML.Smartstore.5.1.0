@@ -51,6 +51,24 @@
 	<ItemGroup>
 		<None Include="App_Data\icons.json" CopyToPublishDirectory="PreserveNewest" />
 		<None Include="App_Data\widgetzones.json" CopyToPublishDirectory="PreserveNewest" />
+		<None Include="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Home.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Menu.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Brands.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Home.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Menu.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\_Layout.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
 		<None Include="App_Data\EmailTemplates\**" CopyToPublishDirectory="PreserveNewest" />
 		<None Include="App_Data\Geo\**" CopyToPublishDirectory="PreserveNewest" />
 		<None Include="App_Data\Localization\**" CopyToPublishDirectory="PreserveNewest" />
@@ -83,6 +101,12 @@
     
     <!-- Don't publish static/raw files -->
 	<ItemGroup>
+        <Content Remove="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Home.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Menu.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Brands.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Home.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Menu.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\_Layout.cshtml" />
         <Content Remove="wwwroot\lib\bi\bootstrap-icons-all.svg" CopyToPublishDirectory="Never" />
         <Content Remove="wwwroot\lib\fontastic\icomoon\**" CopyToPublishDirectory="Never" />
         <TypeScriptCompile Remove="Themes\MEDlight-Theme\**" />
@@ -138,5 +162,13 @@
 		
 		<AssemblyName>Smartstore.Web</AssemblyName>
 	</PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <Optimize>True</Optimize>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+      <Optimize>False</Optimize>
+    </PropertyGroup>
 
 </Project>
