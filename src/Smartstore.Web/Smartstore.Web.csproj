@@ -57,6 +57,36 @@
 		<None Include="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Menu.cshtml">
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Footer\Default.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Categories.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Dropdown.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\LinkList.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\ListGroup.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Main.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Navbar.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\OffCanvasCart\Default.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\ShopLogo\Default.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="Themes\MEDlight-Theme\Views\Shared\Layouts\_Document.cshtml">
+		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
 		<None Include="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Brands.cshtml">
 		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</None>
@@ -103,10 +133,26 @@
 	<ItemGroup>
         <Content Remove="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Home.cshtml" />
         <Content Remove="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Menu.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Footer\Default.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Categories.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Dropdown.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\LinkList.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\ListGroup.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Main.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Navbar.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\OffCanvasCart\Default.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\ShopLogo\Default.cshtml" />
+        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Layouts\_Document.cshtml" />
         <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Brands.cshtml" />
         <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Home.cshtml" />
         <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Menu.cshtml" />
         <Content Remove="Themes\MEDlight-Theme\Views\_Layout.cshtml" />
+        <Content Remove="Views\Catalog\Components\Footer\Default.cshtml" />
+        <Content Remove="Views\Catalog\Components\Menu\Dropdown.cshtml" />
+        <Content Remove="Views\Catalog\Components\Menu\LinkList.cshtml" />
+        <Content Remove="Views\Catalog\Components\Menu\ListGroup.cshtml" />
+        <Content Remove="Views\Catalog\Components\Menu\Main.cshtml" />
+        <Content Remove="Views\Catalog\Components\Menu\Navbar.cshtml" />
         <Content Remove="wwwroot\lib\bi\bootstrap-icons-all.svg" CopyToPublishDirectory="Never" />
         <Content Remove="wwwroot\lib\fontastic\icomoon\**" CopyToPublishDirectory="Never" />
         <TypeScriptCompile Remove="Themes\MEDlight-Theme\**" />

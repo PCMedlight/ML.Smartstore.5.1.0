@@ -19,7 +19,7 @@
     }
   },
   "iisSettings": {
-    "windowsAuthentication": false,
+    "windowsAuthentication": true,
     "anonymousAuthentication": true,
     "iis": {
       "applicationUrl": "http://localhost:81/smartstore",
