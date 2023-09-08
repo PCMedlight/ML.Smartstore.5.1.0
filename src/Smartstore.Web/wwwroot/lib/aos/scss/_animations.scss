@@ -139,6 +139,8 @@ $aos-distance-rev:  #{calc(var(--aos-distance)*-1)};
       transform: translate3d(0, 100%, 0);
     }
 
+
+
     [data-aos='slide-down'] {
       transform: translate3d(0, -100%, 0);
     }
