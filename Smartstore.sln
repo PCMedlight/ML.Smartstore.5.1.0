@@ -12,9 +12,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Smartstore", "src\Smartstore\Smartstore.csproj", "{2DEC17CE-3292-4F40-AC27-2F17ECABC2B2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{E5C1AA43-6B44-4EFA-8DE9-6070EE007CE3}"
-	ProjectSection(SolutionItems) = preProject
-		src\Smartstore.Modules\module.schema.json = src\Smartstore.Modules\module.schema.json
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B3391994-AE0F-4C8C-AE8E-968F6013B4B6}"
 EndProject
@@ -82,6 +79,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Smartstore.Data.PostgreSql", "src\Smartstore.Data\Smartstore.Data.PostgreSql\Smartstore.Data.PostgreSql.csproj", "{1A016177-D0EA-49AD-9BD5-BAD99D9D08F9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Smartstore.Data.Sqlite", "src\Smartstore.Data\Smartstore.Data.Sqlite\Smartstore.Data.Sqlite.csproj", "{32683DB7-C20D-4ABD-BE90-569168B2A68F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ML.Tabs", "src\Smartstore.Modules\ML.Tabs\ML.Tabs.csproj", "{11EB5DAB-FBEC-4F44-AB9C-4460B07F1FB8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ML.Localize", "src\Smartstore.Modules\ML.Localize\ML.Localize.csproj", "{1FBF7AB9-43EB-4AC5-87F0-90F626E18CE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -267,6 +268,18 @@ Global
 		{32683DB7-C20D-4ABD-BE90-569168B2A68F}.DebugNoRazorCompile|Any CPU.Build.0 = DebugNoRazorCompile|Any CPU
 		{32683DB7-C20D-4ABD-BE90-569168B2A68F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32683DB7-C20D-4ABD-BE90-569168B2A68F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11EB5DAB-FBEC-4F44-AB9C-4460B07F1FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11EB5DAB-FBEC-4F44-AB9C-4460B07F1FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11EB5DAB-FBEC-4F44-AB9C-4460B07F1FB8}.DebugNoRazorCompile|Any CPU.ActiveCfg = DebugNoRazorCompile|Any CPU
+		{11EB5DAB-FBEC-4F44-AB9C-4460B07F1FB8}.DebugNoRazorCompile|Any CPU.Build.0 = DebugNoRazorCompile|Any CPU
+		{11EB5DAB-FBEC-4F44-AB9C-4460B07F1FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11EB5DAB-FBEC-4F44-AB9C-4460B07F1FB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FBF7AB9-43EB-4AC5-87F0-90F626E18CE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FBF7AB9-43EB-4AC5-87F0-90F626E18CE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FBF7AB9-43EB-4AC5-87F0-90F626E18CE7}.DebugNoRazorCompile|Any CPU.ActiveCfg = DebugNoRazorCompile|Any CPU
+		{1FBF7AB9-43EB-4AC5-87F0-90F626E18CE7}.DebugNoRazorCompile|Any CPU.Build.0 = DebugNoRazorCompile|Any CPU
+		{1FBF7AB9-43EB-4AC5-87F0-90F626E18CE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FBF7AB9-43EB-4AC5-87F0-90F626E18CE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -298,6 +311,8 @@ Global
 		{0C26B088-A8F6-42E8-AB8D-D9D297FDD72C} = {E5C1AA43-6B44-4EFA-8DE9-6070EE007CE3}
 		{1A016177-D0EA-49AD-9BD5-BAD99D9D08F9} = {82A38DDA-C944-4C15-AF43-86732F8ED15A}
 		{32683DB7-C20D-4ABD-BE90-569168B2A68F} = {82A38DDA-C944-4C15-AF43-86732F8ED15A}
+		{11EB5DAB-FBEC-4F44-AB9C-4460B07F1FB8} = {E5C1AA43-6B44-4EFA-8DE9-6070EE007CE3}
+		{1FBF7AB9-43EB-4AC5-87F0-90F626E18CE7} = {E5C1AA43-6B44-4EFA-8DE9-6070EE007CE3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A0A0B995-5D0B-458E-BCC0-1071B76949D1}
