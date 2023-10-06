@@ -207,6 +207,8 @@
 		<ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
 		
 		<AssemblyName>Smartstore.Web</AssemblyName>
+		
+		<PackageId />
 	</PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
