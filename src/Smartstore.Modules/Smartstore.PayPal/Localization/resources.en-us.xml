@@ -28,9 +28,6 @@
     <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalGiroPay" AppendRootKey="false">
         <Value>Giropay</Value>
     </LocaleResource>
-    <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalSofort" AppendRootKey="false">
-        <Value>Sofortüberweisung</Value>
-    </LocaleResource>
     <LocaleResource Name="Plugins.FriendlyName.Payments.PayPalBancontact" AppendRootKey="false">
         <Value>Bancontact</Value>
     </LocaleResource>
@@ -93,13 +90,6 @@
         <Value>
             <![CDATA[
                 After completing the order, the customer is redirected directly to GiroPay to complete the payment process.
-            ]]>
-        </Value>
-    </LocaleResource>
-    <LocaleResource Name="Plugins.Description.Payments.PayPalSofort" AppendRootKey="false">
-        <Value>
-            <![CDATA[
-                After completing the order, the customer is redirected directly to Sofortüberweisung to complete the payment process.
             ]]>
         </Value>
     </LocaleResource>
@@ -195,13 +185,6 @@
                       ]]>
                 </Value>
             </LocaleResource>
-            <LocaleResource Name="PayPalSofort" AppendRootKey="false">
-                <Value>
-                    <![CDATA[
-                        You will be redirected to the Sofortüberweisung website to complete the payment.
-                      ]]>
-                </Value>
-            </LocaleResource>
             <LocaleResource Name="PayPalBancontact" AppendRootKey="false">
                 <Value>
                     <![CDATA[
@@ -265,7 +248,7 @@
 							To set up PayPal in your store use the button <b>Connect account</b> or alternatively follow the steps in the following guide.
 						</p>
 						<ul>
-							<li>Sign in with your PayPal account details <a href="https://developer.paypal.com/developer/applications" target="_blank">in the developer dashboard</a>.</li>
+							<li>Sign in with your PayPal account details <a href="https://developer.paypal.com/developer/applications" target="_blank" class="alert-link">in the developer dashboard</a>.</li>
 							<li>Create a new app by clicking on the <b>Create App</b> button.</li>
 							<li>Now enter the account, client ID and secret in the fields provided further down this page.</li>
 							<li>Create a webhook and store the URL below as the webhook URL in your PayPal app.</li>
@@ -402,6 +385,15 @@
             <LocaleResource Name="FundingsCart.Hint">
                 <Value>Specifies which payment options to display on the shopping cart page.</Value>
             </LocaleResource>
+
+            <LocaleResource Name="TransmitTrackingNumbers">
+                <Value>Transmit tracking numbers</Value>
+            </LocaleResource>
+            <LocaleResource Name="TransmitTrackingNumbers.Hint">
+                <Value>
+                    Specifies whether tracking numbers should be sent to PayPal as soon as they have been entered or updated in the shipment.
+                </Value>
+            </LocaleResource>
             <LocaleResource Name="Capture">
                 <Value>Immediately debit</Value>
             </LocaleResource>
@@ -512,15 +504,6 @@
             <LocaleResource Name="NoWhitespace">
                 <Value>Whitespace isn't allowed.</Value>
             </LocaleResource>
-            <LocaleResource Name="DateOfBirthDay.NotNull">
-                <Value>Please enter the day of your date of birth.</Value>
-            </LocaleResource>
-            <LocaleResource Name="DateOfBirthMonth.NotNull">
-                <Value>Please enter the month of your date of birth.</Value>
-            </LocaleResource>
-            <LocaleResource Name="DateOfBirthYear.NotNull">
-                <Value>Please enter the year of your date of birth.</Value>
-            </LocaleResource>
             <LocaleResource Name="PhoneNumber.Invalid">
                 <Value>Please enter a valid telephone number without spaces.</Value>
             </LocaleResource>
@@ -531,20 +514,14 @@
             <LocaleResource Name="FullName.NotEmpty">
                 <Value>Please enter your full name.</Value>
             </LocaleResource>
-            <LocaleResource Name="Address2">
-                <Value>Street number</Value>
-            </LocaleResource>
-            <LocaleResource Name="Country.NotEmpty">
-                <Value>Please select a country.</Value>
-            </LocaleResource>
-            <LocaleResource Name="StateProvince.NotEmpty">
-                <Value>Please select a state/province.</Value>
-            </LocaleResource>
             <LocaleResource Name="BIC">
                 <Value>BIC</Value>
             </LocaleResource>
             <LocaleResource Name="Error.CreditCardData">
                 <Value>Please verify your credit card information.</Value>
+            </LocaleResource>
+            <LocaleResource Name="Error.3DSecure">
+                <Value>An error has occurred when confirming your card with your card provider.</Value>
             </LocaleResource>
             <LocaleResource Name="CartHasChanged">
                 <Value>Your shopping cart has changed after login. Please confirm your current shopping cart with PayPal.</Value>

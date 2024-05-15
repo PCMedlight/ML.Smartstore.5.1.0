@@ -4,7 +4,7 @@
 // InstantSearch Box & Drop Styles
 // --------------------------------------------------
 
-$facet-selection-color:             darken($success, 15%);
+$facet-selection-color: inherit;
 
 .instasearch-form {
     position: relative;
@@ -124,12 +124,12 @@ $facet-selection-color:             darken($success, 15%);
 .instasearch-drop {
     position: absolute;
     display: none;
-    left: 1px;
-    right: 1px;
+    inset-inline: 0;
     top: 100%;
     margin-top: -1px;
-    min-width: calc(100% - 2px);
-    max-width: calc(100% - 2px);
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
     min-height: 50px;
     border: 1px solid $searchbox-border-2;
     box-shadow: $dropdown-box-shadow;
@@ -145,19 +145,19 @@ $facet-selection-color:             darken($success, 15%);
 
 .instasearch-drop-body {
     margin-top: 1.25rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 10px;
 }
 
 .instasearch-match {
-    font-weight: bold;
+    font-weight: $font-weight-bold;
 }
 
 .instasearch-group-header {
     margin: 0 20px;
     padding-bottom: 0.3rem;
-    font-size: 22px; // rem gets too small on mobile
+    font-size: 18px;
     color: $info;
-    font-weight: $font-weight-light;
+    font-weight: $font-weight-medium;
 
     ~ .instasearch-group-header {
         margin-top: 1.2rem;
@@ -166,54 +166,48 @@ $facet-selection-color:             darken($success, 15%);
 
 .instasearch-hits {
     @include list-unstyled;
-    margin: 0;
+    margin-inline: 10px;
     margin-bottom: 1rem;
 
     &:last-child { margin-bottom: 0; }
     .instasearch-col:first-child &:last-child {
         margin-bottom: 1rem;
     }
-
-    &.has-thumbs li {
-        border-bottom: 1px solid rgba(#000, 0.12);
-    }
-    &.has-thumbs li:last-child {
-        border-bottom: none;
-    }
 }
 
 @include media-breakpoint-up(sm) {
     .instasearch-col {
-        &:first-child { border-inline-end: 1px solid rgba(0,0,0, 0.1)  }
+        &:first-child { border-inline-end: 1px solid rgba($black, 0.1)  }
     }
 }
 @include media-breakpoint-up(lg) {
     .instasearch-drop {
         max-width: none;
+        min-width: 850px;
         inset-inline-end: auto;
-    }
-    .instasearch-row {
-        width: 850px;
     }
 }
 .instasearch-hit, 
 .instasearch-no-hits {
-    display: inline-flex;
-    align-items: baseline;
     position: relative;
     width: 100%;
-    padding: 8px 20px;
+    padding: 8px 10px;
     clear: both;
     white-space: normal;
-    font-size: 14px; // rem gets too small on mobile
+    font-size: 14px;
     line-height: 1.3;
 }
 
 .instasearch-hit {
-    color: $dropdown-link-color;
+    display: inline-block;
+    color: $body-color;
     text-decoration: none;
+    border-radius: var(--border-radius-md);
 
-    &:focus, &:hover, &.active, &.key-hover {
+    &:focus, 
+    &:hover, 
+    &.active, 
+    &.key-hover {
         color: $dropdown-link-hover-color;
         text-decoration: none;
         background-color: $dropdown-link-hover-bg;
@@ -227,7 +221,6 @@ $facet-selection-color:             darken($success, 15%);
 .instasearch-hit-tag {
     color: $searchbox-hit-tag-color;
     font-size: 13px;
-    padding-inline-start: 0.2rem;
 }
 
 .instasearch-hit-wrapper {
@@ -245,7 +238,7 @@ $facet-selection-color:             darken($success, 15%);
 }
 
 .instasearch-hit-label-secondary {
-    padding-top: 4px;
+    padding-top: 1px;
     color: $text-muted;
 }
 
@@ -269,16 +262,16 @@ $facet-selection-color:             darken($success, 15%);
 
 .facet-group {
 	position: relative;
-	border-bottom: 1px solid rgba(0,0,0, 0.12);
-    font-size: 14px;
+	border-bottom: 1px solid rgba($black, 0.12);
 }
 
 .facet-group-header {
     position: relative;
-    display: block;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
     padding: 0.75rem 0;
     padding-inline-end: 1rem;
-    font-size: 1rem;
     font-weight: $font-weight-medium;
     color: $body-color !important;
     text-decoration: none !important;
@@ -302,12 +295,19 @@ $facet-selection-color:             darken($success, 15%);
 	    transform: rotate(180deg);
     }
 
+    &.has-selection {
+        color: $facet-selection-color !important;
+    }
+
     .facet-selection {
-        display: none;
+        position: relative;
+        margin-inline-start: auto;
+        inset-inline-end: 0.5rem;
     }
 }
 
 .facet-body {
+    font-size: 14px;
     padding-bottom: 1rem;
 
     .numberinput-group {
@@ -457,13 +457,14 @@ $facet-selection-color:             darken($success, 15%);
 
 .active-filters {
     position: relative;
+    font-size: $small-font-size;
 }
 
 .active-filter-link {
     position: relative;
     font-weight: $font-weight-normal;
     max-width: 12rem;
-    line-height: 1.2; // to prevent cutoff
+    //line-height: 1.2; // to prevent cutoff
 
     &:after {
         position: relative;
@@ -484,29 +485,22 @@ $facet-selection-color:             darken($success, 15%);
 
 .offcanvas {
     .facet-toggle,
+    .facet-group-header,
     .facet-body {
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding-inline: var(--offcanvas-padding-x, 1.5rem);
     }
 
-    .facet-toggle:after {
-        inset-inline-end: 1rem;
-    }
+    .facet-toggle {
+        // TODO: Fix this (+4px) after unifying accordion togglers.
+        --facet-toggle-end: calc(4px + var(--offcanvas-padding-x, 1.5rem));
 
-    .facet-toggle.has-selection {
-        color: $facet-selection-color !important;
-
-        .facet-selection {
-            display: inline;
-            color: rgba(#000, 0.4);
-            font-size: $font-size-base;
-            position: absolute;
-            text-align: end;
-            inset-inline-end: 2.5rem;
-            vertical-align: middle;
-            line-height: 1.8;
-            font-weight: 400;
+        &:after {
+            inset-inline-end: var(--facet-toggle-end);
         }
+    }
+
+    .facet-selection {
+        inset-inline-end: var(--facet-toggle-end);
     }
 
     .facet-body-inner {

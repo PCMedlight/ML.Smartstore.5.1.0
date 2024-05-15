@@ -15,30 +15,33 @@ namespace Smartstore.Web.Controllers
         private readonly CatalogHelper _catalogHelper;
         private readonly ICatalogSearchService _catalogSearchService;
         private readonly ILocalizedEntityService _localizedEntityService;
+        private readonly Lazy<IProductService> _productService;
+        private readonly ProductUrlHelper _productUrlHelper;
         private readonly MediaSettings _mediaSettings;
         private readonly SearchSettings _searchSettings;
         private readonly CatalogSettings _catalogSettings;
-        private readonly Lazy<IProductService> _productService;
-        private readonly ProductUrlHelper _productUrlHelper;
+        private readonly SeoSettings _seoSettings;
 
         public SearchController(
             CatalogHelper catalogHelper,
             ICatalogSearchService catalogSearchService,
             ILocalizedEntityService localizedEntityService,
+            Lazy<IProductService> productService,
+            ProductUrlHelper productUrlHelper,
             MediaSettings mediaSettings,
             SearchSettings searchSettings,
             CatalogSettings catalogSettings,
-            Lazy<IProductService> productService,
-            ProductUrlHelper productUrlHelper)
+            SeoSettings seoSettings)
         {
             _catalogHelper = catalogHelper;
             _catalogSearchService = catalogSearchService;
             _localizedEntityService = localizedEntityService;
+            _productService = productService;
+            _productUrlHelper = productUrlHelper;
             _mediaSettings = mediaSettings;
             _searchSettings = searchSettings;
             _catalogSettings = catalogSettings;
-            _productService = productService;
-            _productUrlHelper = productUrlHelper;
+            _seoSettings = seoSettings;
         }
 
         [HttpPost]
@@ -102,7 +105,7 @@ namespace Smartstore.Web.Controllers
             var model = new SearchResultModel(query);
             var term = query?.DefaultTerm;
 
-            if (term == null || term.Length < _searchSettings.InstantSearchTermMinLength)
+            if ((term == null || term.Length < _searchSettings.InstantSearchTermMinLength) && !query.HasSelectedFacets)
             {
                 model.SearchResult = new CatalogSearchResult(query);
                 model.TopProducts = ProductSummaryModel.Empty;
@@ -180,6 +183,16 @@ namespace Smartstore.Web.Controllers
 
             // Add product hits.
             model.TopProducts = summaryModel;
+
+            if (_seoSettings.CanonicalUrlsEnabled)
+            {
+                var page = query.PageIndex + 1;
+                object queryValues = page == 1
+                    ? new { q = query.DefaultTerm }
+                    : new { q = query.DefaultTerm, i = page };
+
+                model.CanonicalUrl = Url.RouteUrl("Search", queryValues, Request.Scheme);
+            }
 
             return View(model);
         }

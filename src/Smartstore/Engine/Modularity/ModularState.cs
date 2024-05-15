@@ -19,7 +19,7 @@ namespace Smartstore.Engine.Modularity
 
             protected override int ComputeHash()
             {
-                var hashCombiner = new HashCodeCombiner();
+                var hashCombiner = HashCodeCombiner.Start();
 
                 // Add each *.dll and module.json file of compatible modules.
                 var arrModules = _appContext.ModuleCatalog.GetInstalledModules()
@@ -108,7 +108,7 @@ namespace Smartstore.Engine.Modularity
             if (file.Exists)
             {
                 var content = file.ReadAllText();
-                var lines = content.GetLines(true, true)
+                var lines = content.ReadLines(true, true)
                     .Select(x => isLegacy ? MapLegacyModuleName(x) : x);
 
                 if (isLegacy)
@@ -127,7 +127,7 @@ namespace Smartstore.Engine.Modularity
             if (file.Exists)
             {
                 var content = file.ReadAllText();
-                _pendingModules.AddRange(content.GetLines(true, true));
+                _pendingModules.AddRange(content.ReadLines(true, true));
             }
         }
 

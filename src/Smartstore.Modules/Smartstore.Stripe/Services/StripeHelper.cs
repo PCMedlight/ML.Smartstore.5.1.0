@@ -21,7 +21,12 @@ namespace Smartstore.StripeElements.Services
         private readonly IProductService _productService;
         private readonly IOrderCalculationService _orderCalculationService;
         private readonly ICurrencyService _currencyService;
+        private readonly IRoundingHelper _roundingHelper;
         private readonly IPaymentService _paymentService;
+
+        // INFO: Update API Version when updating Stripe.net dll
+        // Also test webhook endpoint because thats where errors are most likely to occur.
+        public static string ApiVersion => "2023-10-16";
 
         public StripeHelper(
             ICommonServices services,
@@ -31,6 +36,7 @@ namespace Smartstore.StripeElements.Services
             IProductService productService,
             IOrderCalculationService orderCalculationService,
             ICurrencyService currencyService,
+            IRoundingHelper roundingHelper,
             IPaymentService paymentService)
         {
             _services = services;
@@ -40,6 +46,7 @@ namespace Smartstore.StripeElements.Services
             _productService = productService;
             _orderCalculationService = orderCalculationService;
             _currencyService = currencyService;
+            _roundingHelper = roundingHelper;
             _paymentService = paymentService;
         }
 
@@ -54,7 +61,7 @@ namespace Smartstore.StripeElements.Services
 
             // Get subtotal
             var cartSubTotal = await _orderCalculationService.GetShoppingCartSubtotalAsync(cart, true);
-            var subTotalConverted = _currencyService.ConvertFromPrimaryCurrency(cartSubTotal.SubtotalWithoutDiscount.Amount, currency);
+            var subTotalConverted = _currencyService.ConvertFromPrimaryCurrency(cartSubTotal.SubtotalWithDiscount.Amount, currency);
 
             var cartProducts = cart.Items.Select(x => x.Item.Product).ToArray();
             var batchContext = _productService.CreateProductBatchContext(cartProducts, null, customer, false);
@@ -70,8 +77,8 @@ namespace Smartstore.StripeElements.Services
 
                 displayItems.Add(new StripePaymentItem
                 {
+                    Amount = _roundingHelper.ToSmallestCurrencyUnit(subtotal.FinalPrice),
                     Label = item.Item.Product.GetLocalized(x => x.Name),
-                    Amount = subtotal.FinalPrice.Amount.ToSmallestCurrencyUnit(),
                     Pending = false
                 });
             }
@@ -80,10 +87,10 @@ namespace Smartstore.StripeElements.Services
             var stripePaymentRequest = new StripePaymentRequest
             {
                 Country = _services.WorkContext.WorkingLanguage.UniqueSeoCode.ToUpper(),
-                Currency = _services.WorkContext.WorkingCurrency.CurrencyCode.ToLower(),
+                Currency = currency.CurrencyCode.ToLower(),
                 Total = new StripePaymentItem
                 {
-                    Amount = subTotalConverted.Amount.ToSmallestCurrencyUnit(),
+                    Amount = _roundingHelper.ToSmallestCurrencyUnit(subTotalConverted),
                     Label = T("Order.SubTotal").Value,
                     Pending = false
                 },
@@ -109,14 +116,14 @@ namespace Smartstore.StripeElements.Services
                 // Create webhook
                 var createOptions = new WebhookEndpointCreateOptions
                 {
-                    ApiVersion = Module.ApiVersion,
+                    ApiVersion = ApiVersion,
                     Url = storeUrl + "stripe/webhookhandler",
-                    EnabledEvents = new List<string>
-                    {
+                    EnabledEvents =
+                    [
                         "payment_intent.succeeded",
                         "payment_intent.canceled",
                         "charge.refunded"
-                    }
+                    ]
                 };
 
                 var webhook = await service.CreateAsync(createOptions);

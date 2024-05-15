@@ -320,6 +320,7 @@ namespace Smartstore.Web.TagHelpers.Admin
             var clientRes = new Dictionary<string, string>
             {
                 ["saveChanges"] = T("Admin.Common.SaveChanges"),
+                ["filter"] = T("Common.Filter"),
                 ["cancel"] = T("Common.Cancel"),
                 ["resetState"] = T(resRoot + "ResetState"),
                 ["fitColumns"] = T(resRoot + "FitColumns"),
@@ -386,6 +387,7 @@ namespace Smartstore.Web.TagHelpers.Admin
                     stickyFooter = StickyFooter,
                     maxHeight = MaxHeight,
                     showSearch = false,
+                    preserveSearchState = SearchPanel?.PreserveState ?? false,
                     stateKey = Id,
                     preserveState = PreserveGridState,
                     version = Version,

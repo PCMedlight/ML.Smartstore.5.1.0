@@ -27,6 +27,7 @@ namespace Smartstore.Google.Analytics.Services
         private readonly IOrderCalculationService _orderCalculationService;
         private readonly IShoppingCartService _shoppingCartService;
         private readonly ICurrencyService _currencyService;
+        private readonly IRoundingHelper _roundingHelper;
         private readonly IWorkContext _workContext;
         private readonly IStoreContext _storeContext;
 
@@ -38,6 +39,7 @@ namespace Smartstore.Google.Analytics.Services
             IOrderCalculationService orderCalculationService,
             IShoppingCartService shoppingCartService,
             ICurrencyService currencyService,
+            IRoundingHelper roundingHelper,
             IWorkContext workContext,
             IStoreContext storeContext)
         {
@@ -48,6 +50,7 @@ namespace Smartstore.Google.Analytics.Services
             _orderCalculationService = orderCalculationService;
             _shoppingCartService = shoppingCartService;
             _currencyService = currencyService;
+            _roundingHelper = roundingHelper;
             _workContext = workContext;
             _storeContext = storeContext;
         }
@@ -58,7 +61,7 @@ namespace Smartstore.Google.Analytics.Services
         /// Generates global GA script
         /// </summary>
         /// <param name="cookiesAllowed">Defines whether cookies can be used by Google and sets ad_storage & analytics_storage of the consent tag accordingly.</param>
-        public string GetTrackingScript(bool cookiesAllowed)
+        public string GetTrackingScript(bool cookiesAllowed, bool adUserDataAllowed, bool adPersonalizationAllowed)
         {
             using var writer = new StringWriter();
 
@@ -69,7 +72,9 @@ namespace Smartstore.Google.Analytics.Services
 
                 // If no consent to third party cookies was given, set storage type to denied.
                 ["STORAGETYPE"] = () => cookiesAllowed ? "granted" : "denied",
-                ["USERID"] = () => _workContext.CurrentCustomer.CustomerGuid.ToString()
+                ["USERID"] = _workContext.CurrentCustomer.CustomerGuid.ToString,
+                ["ADUSERDATA"] = () => adUserDataAllowed ? "granted" : "denied",
+                ["ADPERSONALIZATION"] = () => adPersonalizationAllowed ? "granted" : "denied"
             };
 
             ParseScript(_settings.TrackingScript, writer, globalTokens);
@@ -88,14 +93,15 @@ namespace Smartstore.Google.Analytics.Services
             var defaultProductCategory = (await _categoryService.GetProductCategoriesByProductIdsAsync(new[] { model.Id })).FirstOrDefault();
             var categoryId = defaultProductCategory != null ? defaultProductCategory.Category.Id : 0;
             var categoryPathScript = categoryId != 0 ? await GetCategoryPathAsync(categoryId) : string.Empty;
-
+            var price = _roundingHelper.Round(model.Price.FinalPrice).ToStringInvariant();
+            
             var productsScript = GetItemScript(
                 model.Id,
                 model.Sku,
                 model.Name,
-                !model.Price.HasDiscount ? "''" : model.Price.Saving.SavingAmount.Value.RoundedAmount.ToStringInvariant(),
+                !model.Price.HasDiscount ? "''" : _roundingHelper.Round(model.Price.Saving.SavingAmount.Value).ToStringInvariant(),
                 brand != null ? brand.Name : string.Empty,
-                model.Price.FinalPrice.RoundedAmount.ToStringInvariant(),
+                price,
                 categoryPathScript, addComma: false);
 
             var eventScript = @$"
@@ -109,7 +115,7 @@ namespace Smartstore.Google.Analytics.Services
             
                 gtag('event', 'view_item', {{
                   currency: '{_workContext.WorkingCurrency.CurrencyCode}',
-                  value: {model.Price.FinalPrice.RoundedAmount.ToStringInvariant()},
+                  value: {price},
                   items: [pdItem]
                 }});";
 
@@ -123,10 +129,8 @@ namespace Smartstore.Google.Analytics.Services
         /// <returns>Script part to fire GA event view_cart</returns>
         public async Task<string> GetCartScriptAsync(ShoppingCartModel model)
         {
-            var currency = _workContext.WorkingCurrency;
             var cart = await _shoppingCartService.GetCartAsync(_workContext.CurrentCustomer, ShoppingCartType.ShoppingCart, _storeContext.CurrentStore.Id);
-            var cartSubTotal = await _orderCalculationService.GetShoppingCartSubtotalAsync(cart);
-            var subTotalConverted = _currencyService.ConvertFromPrimaryCurrency(cartSubTotal.SubtotalWithoutDiscount.Amount, currency);
+            var subtotal = await GetSubtotal(cart);
             var cartItemsScript = GetShoppingCartItemsScript(model.Items.ToList());
 
             return @$"
@@ -140,8 +144,8 @@ namespace Smartstore.Google.Analytics.Services
                 window.gaListDataStore.push(cartItemList);
 
                 gtag('event', 'view_cart', {{
-                    currency: '{currency.CurrencyCode}',
-                    value: {subTotalConverted.RoundedAmount.ToStringInvariant()},
+                    currency: '{_workContext.WorkingCurrency.CurrencyCode}',
+                    value: {subtotal.ToStringInvariant()},
                     items: cartItems
                 }});";
         }
@@ -155,10 +159,8 @@ namespace Smartstore.Google.Analytics.Services
         /// <returns>Script part to fire GA event begin_checkout, add_shipping_info or add_payment_info</returns>
         public async Task<string> GetCheckoutScriptAsync(bool addShippingInfo = false, bool addPaymentInfo = false)
         {
-            var currency = _workContext.WorkingCurrency;
             var cart = await _shoppingCartService.GetCartAsync(_workContext.CurrentCustomer, ShoppingCartType.ShoppingCart, _storeContext.CurrentStore.Id);
-            var cartSubTotal = await _orderCalculationService.GetShoppingCartSubtotalAsync(cart);
-            var subTotalConverted = _currencyService.ConvertFromPrimaryCurrency(cartSubTotal.SubtotalWithoutDiscount.Amount, currency);
+            var subtotal = await GetSubtotal(cart);
 
             var model = await cart.MapAsync();
             var cartItemsScript = GetShoppingCartItemsScript(model.Items.ToList());
@@ -174,14 +176,22 @@ namespace Smartstore.Google.Analytics.Services
                 let cartItems = {cartItemsScript};
 
                 gtag('event', '{eventType}', {{
-                    currency: '{currency.CurrencyCode}',
-                    value: {subTotalConverted.RoundedAmount.ToStringInvariant()},
+                    currency: '{_workContext.WorkingCurrency.CurrencyCode}',
+                    value: {subtotal.ToStringInvariant()},
                     coupon: '{model.DiscountBox.CurrentCode}',
                     {(addShippingInfo ? $"shipping_tier: '{model.OrderReviewData.ShippingMethod}'," : string.Empty)}
                     {(addPaymentInfo ? $"payment_type: '{model.OrderReviewData.PaymentMethod}'," : string.Empty)}
                     items: cartItems
                 }});
             ";
+        }
+
+        private async Task<decimal> GetSubtotal(ShoppingCart cart)
+        {
+            var cartSubtotal = await _orderCalculationService.GetShoppingCartSubtotalAsync(cart);
+            var subtotalConverted = _currencyService.ConvertFromPrimaryCurrency(cartSubtotal.SubtotalWithoutDiscount.Amount, _workContext.WorkingCurrency);
+
+            return _roundingHelper.Round(subtotalConverted);
         }
 
         /// <summary>
@@ -201,9 +211,9 @@ namespace Smartstore.Google.Analytics.Services
                     product.Id,
                     product.Sku,
                     product.ProductName,
-                    product.Discount.RoundedAmount.ToStringInvariant(),
+                    product.Price.Saving.SavingAmount.HasValue ? _roundingHelper.Round(product.Price.Saving.SavingAmount.Value).ToStringInvariant() : "0",
                     string.Empty,
-                    product.UnitPrice.RoundedAmount.ToStringInvariant(),
+                    _roundingHelper.Round(product.Price.UnitPrice).ToStringInvariant(),
                     index: ++i);
             }
 
@@ -233,7 +243,7 @@ namespace Smartstore.Google.Analytics.Services
             {
                 if (!node.IsRoot && ++i != 5)
                 {
-                    catScript += $"item_category{(i > 1 ? i.ToString() : string.Empty)}: '{node.Value.Name}',";
+                    catScript += $"item_category{(i > 1 ? i.ToString() : string.Empty)}: '{FixIllegalJavaScriptChars(node.Value.Name)}',";
                 }
             }
 
@@ -250,6 +260,7 @@ namespace Smartstore.Google.Analytics.Services
         /// <returns>Script part to fire GA event view_item_list</returns>
         public async Task<string> GetListScriptAsync(List<ProductSummaryItemModel> products, string listName, int categoryId = 0)
         {
+            listName = FixIllegalJavaScriptChars(listName);
             return @$"
                 let eventData{listName} = {{
                     item_list_name: '{listName}',
@@ -278,14 +289,14 @@ namespace Smartstore.Google.Analytics.Services
             foreach (var product in products)
             {
                 var discount = product.Price.Saving.SavingAmount;
-
+                
                 productsScript += GetItemScript(
                     product.Id,
                     product.Sku,
                     product.Name,
-                    discount != null ? discount.Value.RoundedAmount.ToStringInvariant() : "0",
+                    discount != null ? _roundingHelper.Round(discount.Value).ToStringInvariant() : "0",
                     product.Brand != null ? product.Brand.Name : string.Empty,
-                    product.Price.FinalPrice.RoundedAmount.ToStringInvariant(),
+                    _roundingHelper.Round(product.Price.FinalPrice).ToStringInvariant(),
                     categoryPathScript,
                     listName,
                     ++i);
@@ -381,12 +392,12 @@ namespace Smartstore.Google.Analytics.Services
 
                         var itemTokens = new Dictionary<string, Func<string>>
                         {
-                            ["ORDERID"] = () => order.GetOrderNumber(),
+                            ["ORDERID"] = order.GetOrderNumber,
                             ["PRODUCTSKU"] = () => FixIllegalJavaScriptChars(sku),
                             ["PRODUCTNAME"] = () => FixIllegalJavaScriptChars(item.Product.Name),
                             ["CATEGORYNAME"] = () => FixIllegalJavaScriptChars(categoryName),
                             ["UNITPRICE"] = () => item.UnitPriceInclTax.ToStringInvariant("0.00"),
-                            ["QUANTITY"] = () => item.Quantity.ToString()
+                            ["QUANTITY"] = item.Quantity.ToString
                         };
 
                         ecDetailScript += GenerateScript(_settings.EcommerceDetailScript, itemTokens);
@@ -395,16 +406,18 @@ namespace Smartstore.Google.Analytics.Services
 
                 var orderTokens = new Dictionary<string, Func<string>>
                 {
-                    ["ORDERID"] = () => order.GetOrderNumber(),
+                    ["ORDERID"] = order.GetOrderNumber,
                     ["TOTAL"] = () => order.OrderTotal.ToStringInvariant("0.00"),
                     ["TAX"] = () => order.OrderTax.ToStringInvariant("0.00"),
                     ["SHIP"] = () => order.OrderShippingInclTax.ToStringInvariant("0.00"),
                     ["CURRENCY"] = () => order.CustomerCurrencyCode,
-                    ["CITY"] = () => order.BillingAddress == null ? string.Empty : FixIllegalJavaScriptChars(order.BillingAddress.City),
-                    ["STATEPROVINCE"] = () => order.BillingAddress == null || order.BillingAddress.StateProvince == null
+                    ["CITY"] = () => order.BillingAddress == null 
+                        ? string.Empty 
+                        : FixIllegalJavaScriptChars(order.BillingAddress.City),
+                    ["STATEPROVINCE"] = () => order.BillingAddress?.StateProvince == null
                         ? string.Empty
                         : FixIllegalJavaScriptChars(order.BillingAddress.StateProvince.Name),
-                    ["COUNTRY"] = () => order.BillingAddress == null || order.BillingAddress.Country == null
+                    ["COUNTRY"] = () => order.BillingAddress?.Country == null
                         ? string.Empty
                         : FixIllegalJavaScriptChars(order.BillingAddress.Country.Name),
                     ["DETAILS"] = () => ecDetailScript

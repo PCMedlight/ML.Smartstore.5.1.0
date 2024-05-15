@@ -6,14 +6,13 @@ using Moq;
 using NUnit.Framework;
 using Smartstore.Caching;
 using Smartstore.Core.Catalog.Attributes;
-using Smartstore.Core.Catalog.Brands;
-using Smartstore.Core.Catalog.Categories;
 using Smartstore.Core.Catalog.Discounts;
 using Smartstore.Core.Catalog.Pricing;
 using Smartstore.Core.Catalog.Products;
 using Smartstore.Core.Checkout.Cart;
 using Smartstore.Core.Checkout.Tax;
 using Smartstore.Core.Common;
+using Smartstore.Core.Common.Configuration;
 using Smartstore.Core.Common.Services;
 using Smartstore.Core.Identity;
 using Smartstore.Core.Localization;
@@ -36,15 +35,14 @@ namespace Smartstore.Core.Tests.Catalog.Pricing
         ITaxCalculator _taxCalculator;
         IProductAttributeMaterializer _productAttributeMaterializer;
         IProductService _productService;
-        ICategoryService _categoryService;
-        IManufacturerService _manufacturerService;
         IDiscountService _discountService;
 
         ICurrencyService _currencyService;
-        MockCommonServices _services;
+        IRoundingHelper _roundingHelper;
         ITaxService _taxService;
         IRequestCache _requestCache;
 
+        CurrencySettings _currencySettings;
         PriceSettings _priceSettings;
         TaxSettings _taxSettings;
         Store _store;
@@ -66,7 +64,6 @@ namespace Smartstore.Core.Tests.Catalog.Pricing
             _language = new Language { Id = 1 };
 
             _requestCache = new NullRequestCache();
-            _services = new MockCommonServices(DbContext, LifetimeScope);
 
             var storeContextMock = new Mock<IStoreContext>();
             _storeContext = storeContextMock.Object;
@@ -77,14 +74,12 @@ namespace Smartstore.Core.Tests.Catalog.Pricing
             workContextMock.Setup(x => x.WorkingCurrency).Returns(_currency);
             workContextMock.Setup(x => x.WorkingLanguage).Returns(_language);
 
+            _currencySettings = new CurrencySettings();
+            _priceSettings = new PriceSettings();
+            _taxSettings = new TaxSettings();
+
             var productServiceMock = new Mock<IProductService>();
             _productService = productServiceMock.Object;
-
-            var categoryServiceMock = new Mock<ICategoryService>();
-            _categoryService = categoryServiceMock.Object;
-
-            var manufacturerServiceMock = new Mock<IManufacturerService>();
-            _manufacturerService = manufacturerServiceMock.Object;
 
             var productAttributeMaterializerMock = new Mock<IProductAttributeMaterializer>();
             _productAttributeMaterializer = productAttributeMaterializerMock.Object;
@@ -111,13 +106,12 @@ namespace Smartstore.Core.Tests.Catalog.Pricing
             currencyServiceMock.Setup(x => x.PrimaryCurrency).Returns(_currency);
             currencyServiceMock.Setup(x => x.PrimaryExchangeCurrency).Returns(_currency);
 
+            _roundingHelper = new RoundingHelper(_workContext, _currencySettings);
+
             var priceLabelService = new Mock<IPriceLabelService>();
 
-            _priceSettings = new PriceSettings();
-            _taxSettings = new TaxSettings();
-
             // INFO: no mocking here to use real implementation.
-            _taxCalculator = new TaxCalculator(DbContext, _workContext, _taxService, _taxSettings);
+            _taxCalculator = new TaxCalculator(DbContext, _workContext, _roundingHelper, _taxService, _taxSettings);
 
             // INFO: Create real instance of PriceCalculatorFactory with own instances of Calculators
             _priceCalculatorFactory = new PriceCalculatorFactory(_requestCache, base.GetPriceCalculators(_priceCalculatorFactory, _discountService, _priceSettings));
@@ -132,8 +126,10 @@ namespace Smartstore.Core.Tests.Catalog.Pricing
                 _productAttributeMaterializer,
                 _taxService,
                 _currencyService,
+                _roundingHelper,
                 priceLabelService.Object,
                 _priceSettings,
+                _currencySettings,
                 _taxSettings);
         }
 
@@ -159,7 +155,7 @@ namespace Smartstore.Core.Tests.Catalog.Pricing
                 Quantity = 2,
             };
 
-            _productBatchContext = new ProductBatchContext(new List<Product> { _product }, _services, _store, _customer, false);
+            _productBatchContext = new ProductBatchContext(new List<Product> { _product }, DbContext, LifetimeScope, _store, _customer, false);
             _priceCalculationContext = new PriceCalculationContext(_product, new PriceCalculationOptions(_productBatchContext, _customer, _store, _language, _currency)
             {
                 IgnoreDiscounts = true

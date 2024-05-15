@@ -16,7 +16,8 @@ namespace Smartstore.Core.Data.Migrations
         {
         }
 
-        public bool RollbackOnFailure => false;
+        public DataSeederStage Stage => DataSeederStage.Early;
+        public bool AbortOnFailure => false;
 
         public async Task SeedAsync(SmartDbContext context, CancellationToken cancelToken = default)
         {
@@ -222,7 +223,7 @@ namespace Smartstore.Core.Data.Migrations
                 "Determines whether and in which regions the cookie manager dialog should be displayed.",
                 "Bestimmt, ob und in welchen Regionen der Cookie-Manager-Dialog angezeigt werden soll.");
 
-            builder.AddOrUpdate("Enums.CookieConsentRequirement.Disabled", "Never required", "Nie erforderlich");
+            builder.AddOrUpdate("Enums.CookieConsentRequirement.NeverRequired", "Never required", "Nie erforderlich");
             builder.AddOrUpdate("Enums.CookieConsentRequirement.RequiredInEUCountriesOnly", "Required in EU countries only (recommended)", "Nur in EU-Ländern erforderlich (empfohlen)");
             builder.AddOrUpdate("Enums.CookieConsentRequirement.DependsOnCountry", "Depends on country configuration", "Abhängig von der Länderkonfiguration");
 

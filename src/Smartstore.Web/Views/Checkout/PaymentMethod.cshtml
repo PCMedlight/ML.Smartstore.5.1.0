@@ -6,13 +6,13 @@
 
 @{
     Layout = "_Checkout";
-    Assets.AppendTitleParts(T("PageTitle.Checkout"));
+    Assets.AppendTitleParts(T("PageTitle.Checkout.PaymentMethod"));
     Assets.BodyAttributes.AppendCssClass("no-offcanvas-cart");
     Assets.AddMetaRobots();
 }
 
 <widget target-zone="order_progress">
-    <partial name="CheckoutProgress" model="new CheckoutProgressModel { CheckoutProgressStep = CheckoutProgressStep.Payment }" />
+    @await Component.InvokeAsync("CheckoutProgress", new { action = nameof(CheckoutController.PaymentMethod) })
 </widget>
 
 <div class="page payment-method-page">
@@ -31,6 +31,7 @@
                     {
                         var paymentMethod = Model.PaymentMethods[i];
                         var widgetInvoker = paymentMethod.InfoWidget;
+                        var infoRendered = false;
 
                         var defaultPluginDescKey = "Plugins.PaymentInfo." + paymentMethod.PaymentMethodSystemName;
                         var defaultPluginDesc = LocalizationService.GetResource(defaultPluginDescKey, logIfNotFound: false, returnEmptyIfNotFound: true);
@@ -65,22 +66,29 @@
                                 </div>
                             }
 
-                            @if (!paymentMethod.RequiresInteraction || (paymentMethod.Selected && widgetInvoker != null))
+                            @if (!paymentMethod.RequiresInteraction)
                             {
-                                <div class="opt-info payment-method-info"
-                                     attr-data-lazy-info='(paymentMethod.RequiresInteraction, "true")'
-                                     data-system-name="@paymentMethod.PaymentMethodSystemName">
-
-                                    <div sm-if="paymentMethod.Selected && !ViewData.ModelState.IsValid" id="payment-info-validation-summary">
-                                        @Html.ValidationSummary(false)
-                                    </div>
-
-                                    @if (!(description.HasValue() && !paymentMethod.RequiresInteraction) && paymentMethod.InfoWidget != null)
-                                    {
-                                        @await paymentMethod.InfoWidget.InvokeAsync(ViewContext);
-                                    }
-                                </div>
+                                await RenderPaymentWidget(false);
                             }
+                        }
+
+                        async Task RenderPaymentWidget(bool isEmbedded)
+                        {
+                            infoRendered = true;
+                            <div class="opt-info payment-method-info"
+                                 attr-class='(isEmbedded, "opt-info-embedded")'  
+                                 attr-data-lazy-info='(paymentMethod.RequiresInteraction, "true")'
+                                 data-system-name="@paymentMethod.PaymentMethodSystemName">
+
+                                <div sm-if="paymentMethod.Selected && !ViewData.ModelState.IsValid" id="payment-info-validation-summary">
+                                    @Html.ValidationSummary(false)
+                                </div>
+
+                                @if (!(description.HasValue() && !paymentMethod.RequiresInteraction) && paymentMethod.InfoWidget != null)
+                                {
+                                    @await paymentMethod.InfoWidget.InvokeAsync(ViewContext);
+                                }
+                            </div>
                         }
 
                         <li class="list-group-item opt-list-item payment-method-item" attr-class='(paymentMethod.Selected, "active")'>
@@ -94,6 +102,11 @@
                                         @{ await RenderPaymentMethod(); }
                                     </div>
                                 </div>
+
+                                if (paymentMethod.Selected && widgetInvoker != null && !infoRendered)
+                                {
+                                    await RenderPaymentWidget(true);
+                                }
                             }
                             else
                             {
@@ -104,13 +117,12 @@
                 </ul>
 
                 <div class="buttons">
-                    <a asp-action="ShippingMethod" asp-controller="Checkout" class="btn btn-secondary btn-lg">
+                    <a href="@Model.PreviousStepUrl" class="btn btn-secondary btn-lg">
                         <i class="fa fa-angle-left"></i>
                         <span>@T("Common.Back")</span>
                     </a>
                     <input type="submit" name="nextstep" id="nextstep" class="d-none" />
-
-                    <button class="btn btn-warning btn-lg payment-method-next-step-button" onclick="$('#nextstep').trigger('click');return false;">
+                    <button type="button" class="btn btn-warning btn-lg payment-method-next-step-button">
                         <span>@T("Checkout.NextButton")</span>
                         <i class="fa fa-angle-right"></i>
                     </button>
@@ -137,17 +149,24 @@
             $.scrollTo(validationSummary, 600, { offset: -100 });
         }
 
+        $('.payment-method-next-step-button').on('click', function () {
+            $('#nextstep').trigger('click');
+            return false;
+        });
+
         @if (Model.DisplayPaymentMethodIcons)
         {
             <text>
                 $(".payment-method-item").on('click', function (e) {
                     var item = $(this);
-                    var label = item.find("label");
+                    if (!item.hasClass('active')) {
+                        var label = item.find("label");
 
-                    // Prevent recursive calls.
-                    if (!label.hasClass('clicked')) {
-                        label.addClass('clicked');
-                        label.trigger('click');
+                        // Prevent recursive calls.
+                        if (!label.hasClass('clicked')) {
+                            label.addClass('clicked');
+                            label.trigger('click');
+                        }
                     }
                 });
 

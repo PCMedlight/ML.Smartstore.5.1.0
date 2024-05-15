@@ -198,8 +198,11 @@ namespace Smartstore.Core.Platform.DataExchange.Export
             _writer.WriteElementString(nameof(Currency.CreatedOnUtc), entity.CreatedOnUtc.ToString(_culture));
             _writer.WriteElementString(nameof(Currency.UpdatedOnUtc), entity.UpdatedOnUtc.ToString(_culture));
             _writer.WriteElementString(nameof(Currency.DomainEndings), entity.DomainEndings);
-            _writer.WriteElementString(nameof(Currency.RoundOrderItemsEnabled), entity.RoundOrderItemsEnabled.ToString());
             _writer.WriteElementString(nameof(Currency.RoundNumDecimals), entity.RoundNumDecimals.ToString());
+            _writer.WriteElementString(nameof(Currency.MidpointRounding), ((int)entity.MidpointRounding).ToString());
+            _writer.WriteElementString(nameof(Currency.RoundOrderItemsEnabled), entity.RoundOrderItemsEnabled.ToString());
+            _writer.WriteElementString(nameof(Currency.RoundNetPrices), entity.RoundNetPrices.ToString());
+            _writer.WriteElementString(nameof(Currency.RoundUnitPrices), entity.RoundUnitPrices.ToString());
             _writer.WriteElementString(nameof(Currency.RoundOrderTotalEnabled), entity.RoundOrderTotalEnabled.ToString());
             _writer.WriteElementString(nameof(Currency.RoundOrderTotalDenominator), entity.RoundOrderTotalDenominator.ToString(_culture));
             _writer.WriteElementString(nameof(Currency.RoundOrderTotalRule), ((int)entity.RoundOrderTotalRule).ToString());
@@ -578,6 +581,7 @@ namespace Smartstore.Core.Platform.DataExchange.Export
             }
 
             _writer.WriteElementString(nameof(ShoppingCartItem.Id), entity.Id.ToString());
+            _writer.WriteElementString(nameof(ShoppingCartItem.Active), entity.Active.ToString());
             _writer.WriteElementString(nameof(ShoppingCartItem.StoreId), entity.StoreId.ToString());
             _writer.WriteElementString(nameof(ShoppingCartItem.ParentItemId), entity.ParentItemId?.ToString() ?? string.Empty);
             _writer.WriteElementString(nameof(ShoppingCartItem.BundleItemId), entity.BundleItemId?.ToString() ?? string.Empty);
@@ -718,6 +722,7 @@ namespace Smartstore.Core.Platform.DataExchange.Export
             _writer.WriteElementString(nameof(Product.BundlePerItemShipping), entity.BundlePerItemShipping.ToString());
             _writer.WriteElementString(nameof(Product.BundlePerItemShoppingCart), entity.BundlePerItemShoppingCart.ToString());
             _writer.WriteElementString(nameof(Product.LowestAttributeCombinationPrice), lowestAttributeCombinationPrice?.ToString(_culture) ?? string.Empty);
+            _writer.WriteElementString(nameof(Product.AttributeCombinationRequired), entity.AttributeCombinationRequired.ToString());
             _writer.WriteElementString(nameof(Product.AttributeChoiceBehaviour), ((int)entity.AttributeChoiceBehaviour).ToString());
             _writer.WriteElementString(nameof(Product.IsEsd), entity.IsEsd.ToString());
             _writer.WriteElementString(nameof(Product.CustomsTariffNumber), entity.CustomsTariffNumber);
@@ -873,6 +878,37 @@ namespace Smartstore.Core.Platform.DataExchange.Export
                     _writer.WriteElementString(nameof(ProductManufacturer.IsFeaturedProduct), entityProductManu.IsFeaturedProduct.ToString());
 
                     WriteManufacturer(productManu.Manufacturer, "Manufacturer");
+                    _writer.WriteEndElement();
+                }
+                _writer.WriteEndElement();
+            }
+
+            if (product.RelatedProducts != null)
+            {
+                _writer.WriteStartElement("RelatedProducts");
+                foreach (dynamic relatedProduct in product.RelatedProducts)
+                {
+                    RelatedProduct rpEntity = relatedProduct.Entity;
+
+                    _writer.WriteStartElement("RelatedProduct");
+                    _writer.WriteElementString(nameof(RelatedProduct.Id), rpEntity.Id.ToString());
+                    _writer.WriteElementString(nameof(RelatedProduct.ProductId2), rpEntity.ProductId2.ToString());
+                    _writer.WriteElementString(nameof(RelatedProduct.DisplayOrder), rpEntity.DisplayOrder.ToString());
+                    _writer.WriteEndElement();
+                }
+                _writer.WriteEndElement();
+            }
+
+            if (product.CrossSellProducts != null)
+            {
+                _writer.WriteStartElement("CrossSellProducts");
+                foreach (dynamic crossSellProduct in product.CrossSellProducts)
+                {
+                    CrossSellProduct cspEntity = crossSellProduct.Entity;
+
+                    _writer.WriteStartElement("CrossSellProduct");
+                    _writer.WriteElementString(nameof(CrossSellProduct.Id), cspEntity.Id.ToString());
+                    _writer.WriteElementString(nameof(CrossSellProduct.ProductId2), cspEntity.ProductId2.ToString());
                     _writer.WriteEndElement();
                 }
                 _writer.WriteEndElement();
@@ -1046,6 +1082,7 @@ namespace Smartstore.Core.Platform.DataExchange.Export
                     _writer.WriteElementString(nameof(SpecificationAttribute.Id), entitySa.Id.ToString());
                     _writer.WriteElementString(nameof(SpecificationAttribute.Name), (string)option.SpecificationAttribute.Name);
                     _writer.WriteElementString(nameof(SpecificationAttribute.Alias), (string)option.SpecificationAttribute.Alias);
+                    _writer.WriteElementString(nameof(SpecificationAttribute.Essential), entitySa.Essential.ToString());
                     _writer.WriteElementString(nameof(SpecificationAttribute.DisplayOrder), entitySa.DisplayOrder.ToString());
                     _writer.WriteElementString(nameof(SpecificationAttribute.AllowFiltering), entitySa.AllowFiltering.ToString());
                     _writer.WriteElementString(nameof(SpecificationAttribute.ShowOnProductPage), entitySa.ShowOnProductPage.ToString());

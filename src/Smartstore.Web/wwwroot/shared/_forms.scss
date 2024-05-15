@@ -10,6 +10,10 @@ select {
     font-weight: $font-weight-normal;
 }
 
+select.noskin option:disabled {
+    color: $text-muted;
+}
+
 fieldset.content-group {
     margin-bottom: 2rem;
 
@@ -35,13 +39,14 @@ fieldset.content-group {
         > span {
             position: relative;
             display: inline-block;
+
             @if alpha($body-bg) == 0 {
                 background: $site-bg;
             }
             @else {
                 background: $body-bg;
             }
-            
+
             padding-right: 1rem;
             z-index: 1;
         }
@@ -137,19 +142,11 @@ fieldset.content-group {
         height: 100%;
 		width: var(--inline-icon-size);
         line-height: var(--inline-icon-size);
-        font-size: var(--inline-icon-font-size);
+        font-size: cssmax(16px, var(--inline-icon-font-size));
         inset-inline-start: var(--inline-icon-offset);
 		text-align: center;
 		vertical-align: middle;
         pointer-events: none;
-
-        :before {
-            font-size: cssmax(16px, var(--inline-icon-font-size));
-            position: absolute;
-            inset-inline-start: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-        }
 	}
 
 	&.has-icon-right .input-group-icon {

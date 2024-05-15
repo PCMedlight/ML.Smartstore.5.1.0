@@ -5,12 +5,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.5" GeneratePathProperty="true" />
-        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.5" GeneratePathProperty="true" />
-        <PackageReference Include="SQLitePCLRaw.provider.e_sqlite3" Version="2.1.5" GeneratePathProperty="true" />
-        <PackageReference Include="SQLitePCLRaw.core" Version="2.1.5" GeneratePathProperty="true" />
-        <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="7.0.8" GeneratePathProperty="true" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="7.0.8" GeneratePathProperty="true" />
+        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.8" GeneratePathProperty="true" />
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.8" GeneratePathProperty="true" />
+        <PackageReference Include="SQLitePCLRaw.provider.e_sqlite3" Version="2.1.8" GeneratePathProperty="true" />
+        <PackageReference Include="SQLitePCLRaw.core" Version="2.1.8" GeneratePathProperty="true" />
+        <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="8.0.4" GeneratePathProperty="true" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="8.0.4" GeneratePathProperty="true" />
 
         <!--<None Include="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="runtimes">
             <Visible>true</Visible>
@@ -24,10 +24,10 @@
         <None Include="$(PkgSQLitePCLRaw_core)\lib\netstandard2.0\*.dll" CopyToOutputDirectory="PreserveNewest">
             <Visible>false</Visible>
         </None>
-        <None Include="$(PkgMicrosoft_Data_Sqlite_Core)\lib\net6.0\*.dll" CopyToOutputDirectory="PreserveNewest">
+        <None Include="$(PkgMicrosoft_Data_Sqlite_Core)\lib\net8.0\*.dll" CopyToOutputDirectory="PreserveNewest">
             <Visible>false</Visible>
         </None>
-        <None Include="$(PkgMicrosoft_EntityFrameworkCore_Sqlite_Core)\lib\net6.0\*.dll" CopyToOutputDirectory="PreserveNewest">
+        <None Include="$(PkgMicrosoft_EntityFrameworkCore_Sqlite_Core)\lib\net8.0\*.dll" CopyToOutputDirectory="PreserveNewest">
             <Visible>false</Visible>
         </None>
     </ItemGroup>

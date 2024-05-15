@@ -27,7 +27,7 @@ Vue.component("sm-datagrid", {
 
             <div v-if="hasSearchPanel" class="dg-search d-flex flex-column" :class="{ show: options.showSearch }">
                 <div class="dg-search-header d-flex py-3 mx-3">
-                    <h6 class="m-0 text-muted">Filter</h6>
+                    <h6 class="m-0 text-muted">{{ T.filter }}</h6>
                     <button v-show="numSearchFilters > 0" type="button" class="dg-filter-reset btn btn-light btn-flat btn-sm ml-auto" @click.prevent.stop="resetSearchFilters()">
                         <i class="fa fa-filter-circle-xmark"></i>
                         <span>{{ T.resetState }}</span>
@@ -294,7 +294,7 @@ Vue.component("sm-datagrid", {
 
                         this.indicator.style.display = "block";
                         this.indicator.style.left = (atStart ? rect.left : rect.right) + "px";
-                        this.indicator.style.top = rect.top + "px";
+                        this.indicator.style.top = (rect.top + window.scrollY) + "px";
                         this.indicator.style.height = rect.height + "px";
                     }
                 },
@@ -435,7 +435,7 @@ Vue.component("sm-datagrid", {
             let search = $(this.$el).find(".dg-search-body");
 
             // Restore search filter state
-            if (this.options.preserveState) {
+            if (this.options.preserveSearchState) {
                 this._restoreSearchFilterState(search);
             }
 
@@ -929,7 +929,7 @@ Vue.component("sm-datagrid", {
                         success(result) {
                             if (result.Success || result.success) {
                                 self.selectedRows = {};
-                                displayNotification(self.T.deleteSuccess.format(result.Count || numRows), "success");
+                                displayNotification(self.T.deleteSuccess.format(result.Count !== undefined ? result.Count : numRows), "success");
                                 self.$emit("deleted-rows", rowKeys);
                                 self.read();
                             }
@@ -1461,7 +1461,7 @@ Vue.component("sm-datagrid", {
                 $.extend(true, command, state);
 
                 // Remember filter state for next request
-                if (this.options.preserveState) {
+                if (this.options.preserveSearchState) {
                     this._rememberSearchFilterState(state);
                 }
             }

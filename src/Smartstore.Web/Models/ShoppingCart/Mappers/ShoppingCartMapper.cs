@@ -1,6 +1,4 @@
-﻿using System.Dynamic;
-using System.Globalization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Smartstore.ComponentModel;
 using Smartstore.Core.Catalog;
@@ -22,6 +20,8 @@ using Smartstore.Core.Localization;
 using Smartstore.Core.Security;
 using Smartstore.Engine.Modularity;
 using Smartstore.Utilities.Html;
+using Smartstore.Web.Models.Catalog;
+using Smartstore.Web.Models.Common;
 using Smartstore.Web.Rendering;
 
 namespace Smartstore.Web.Models.Cart
@@ -55,7 +55,7 @@ namespace Smartstore.Web.Models.Cart
             bool setEstimateShippingDefaultAddress = true,
             bool prepareAndDisplayOrderReviewData = false)
         {
-            dynamic parameters = new ExpandoObject();
+            dynamic parameters = new GracefulDynamicObject();
             parameters.IsEditable = isEditable;
             parameters.ValidateCheckoutAttributes = validateCheckoutAttributes;
             parameters.PrepareEstimateShippingIfEnabled = prepareEstimateShippingIfEnabled;
@@ -83,7 +83,6 @@ namespace Smartstore.Web.Models.Cart
         private readonly ICheckoutAttributeMaterializer _checkoutAttributeMaterializer;
         private readonly ModuleManager _moduleManager;
         private readonly OrderSettings _orderSettings;
-        private readonly MeasureSettings _measureSettings;
         private readonly ShippingSettings _shippingSettings;
         private readonly RewardPointsSettings _rewardPointsSettings;
 
@@ -111,7 +110,7 @@ namespace Smartstore.Web.Models.Cart
             ShippingSettings shippingSettings,
             RewardPointsSettings rewardPointsSettings,
             Localizer T)
-            : base(services, shoppingCartSettings, catalogSettings, mediaSettings, T)
+            : base(services, shoppingCartSettings, catalogSettings, mediaSettings, measureSettings, T)
         {
             _db = db;
             _taxCalculator = taxCalculator;
@@ -129,7 +128,6 @@ namespace Smartstore.Web.Models.Cart
             _moduleManager = moduleManager;
             _shippingSettings = shippingSettings;
             _orderSettings = orderSettings;
-            _measureSettings = measureSettings;
             _rewardPointsSettings = rewardPointsSettings;
         }
 
@@ -141,7 +139,7 @@ namespace Smartstore.Web.Models.Cart
             Guard.NotNull(from);
             Guard.NotNull(to);
 
-            if (!from.Items.Any())
+            if (!from.HasItems)
             {
                 return;
             }
@@ -153,32 +151,26 @@ namespace Smartstore.Web.Models.Cart
             var currency = _services.WorkContext.WorkingCurrency;
 
             var isEditable = parameters?.IsEditable == true;
+            var isBillingAddresRequired = from.Requirements.HasFlag(CheckoutRequirements.BillingAddress);
+            var isPaymentRequired = from.Requirements.HasFlag(CheckoutRequirements.Payment);
             var validateCheckoutAttributes = parameters?.ValidateCheckoutAttributes == true;
             var prepareEstimateShippingIfEnabled = parameters?.PrepareEstimateShippingIfEnabled == true;
             var setEstimateShippingDefaultAddress = parameters?.SetEstimateShippingDefaultAddress == true;
-            var prepareAndDisplayOrderReviewData = parameters?.PrepareAndDisplayOrderReviewData == true;
+            var prepareAndDisplayOrderReviewData = parameters?.PrepareAndDisplayOrderReviewData == true &&
+                (from.IsShippingRequired || isBillingAddresRequired || isPaymentRequired);
 
             #region Simple properties
 
             to.MediaDimensions = _mediaSettings.CartThumbPictureSize;
-            to.DeliveryTimesPresentation = _shoppingCartSettings.DeliveryTimesInShoppingCart;
             to.DisplayBasePrice = _shoppingCartSettings.ShowBasePrice;
-            to.DisplayWeight = _shoppingCartSettings.ShowWeight;
             to.DisplayMoveToWishlistButton = await _services.Permissions.AuthorizeAsync(Permissions.Cart.AccessWishlist);
             to.TermsOfServiceEnabled = _orderSettings.TermsOfServiceEnabled;
             to.DisplayCommentBox = _shoppingCartSettings.ShowCommentBox;
             to.DisplayEsdRevocationWaiverBox = _shoppingCartSettings.ShowEsdRevocationWaiverBox;
             to.IsEditable = isEditable;
 
-            var measure = await _db.MeasureWeights.FindByIdAsync(_measureSettings.BaseWeightId, false);
-            if (measure != null)
-            {
-                to.MeasureUnitName = measure.GetLocalized(x => x.Name);
-            }
-
-            to.CheckoutAttributeInfo = HtmlUtility.ConvertPlainTextToTable(
-                HtmlUtility.ConvertHtmlToPlainText(
-                    await _checkoutAttributeFormatter.FormatAttributesAsync(customer.GenericAttributes.CheckoutAttributes, customer)));
+            to.CheckoutAttributeInfo = HtmlUtility.ConvertPlainTextToTable(HtmlUtility.ConvertHtmlToPlainText(
+                await _checkoutAttributeFormatter.FormatAttributesAsync(customer.GenericAttributes.CheckoutAttributes, customer)));
 
             // Gift card and gift card boxes.
             to.DiscountBox.Display = _shoppingCartSettings.ShowDiscountBox;
@@ -214,12 +206,9 @@ namespace Smartstore.Web.Models.Cart
             }
 
             // Cart warnings.
-            var warnings = new List<string>();
-            var cartIsValid = await _shoppingCartValidator.ValidateCartAsync(from, warnings, validateCheckoutAttributes);
-            if (!cartIsValid)
-            {
-                to.Warnings.AddRange(warnings);
-            }
+            await _shoppingCartValidator.ValidateCartAsync(from, to.Warnings, validateCheckoutAttributes);
+
+            to.CheckoutNotAllowedWarning = T(_shoppingCartSettings.AllowActivatableCartItems ? "ShoppingCart.SelectAtLeastOneProduct" : "ShoppingCart.CartIsEmpty");
 
             #endregion
 
@@ -331,32 +320,25 @@ namespace Smartstore.Web.Models.Cart
 
                     case AttributeControlType.Datepicker:
                     {
-                        // Keep in mind my that the code below works only in the current culture.
                         var enteredDate = selectedCheckoutAttributes.AttributesMap
                             .Where(x => x.Key == attribute.Id)
                             .SelectMany(x => x.Value)
                             .FirstOrDefault()?
                             .ToString();
 
-                        if (enteredDate.HasValue()
-                            && DateTime.TryParseExact(enteredDate, "D", CultureInfo.CurrentCulture, DateTimeStyles.None, out var selectedDate))
-                        {
-                            caModel.SelectedDay = selectedDate.Day;
-                            caModel.SelectedMonth = selectedDate.Month;
-                            caModel.SelectedYear = selectedDate.Year;
-                        }
+                        caModel.SelectedDate = enteredDate?.ToDateTime(null);
                     }
                     break;
 
                     case AttributeControlType.FileUpload:
                         if (selectedCheckoutAttributes.AttributesMap.Any())
                         {
-                            var FileValue = selectedCheckoutAttributes.AttributesMap
+                            var fileValue = selectedCheckoutAttributes.AttributesMap
                                 .Where(x => x.Key == attribute.Id)
                                 .Select(x => x.Value.ToString())
                                 .FirstOrDefault();
 
-                            if (FileValue.HasValue() && caModel.UploadedFileGuid.HasValue() && Guid.TryParse(caModel.UploadedFileGuid, out var guid))
+                            if (fileValue.HasValue() && caModel.UploadedFileGuid.HasValue() && Guid.TryParse(caModel.UploadedFileGuid, out var guid))
                             {
                                 var download = await _db.Downloads
                                     .Include(x => x.MediaFile)
@@ -383,9 +365,7 @@ namespace Smartstore.Web.Models.Cart
 
             if (prepareEstimateShippingIfEnabled)
             {
-                to.EstimateShipping.Enabled = _shippingSettings.EstimateShippingEnabled &&
-                    from.Items.Any() &&
-                    from.IncludesMatchingItems(x => x.IsShippingEnabled);
+                to.EstimateShipping.Enabled = _shippingSettings.EstimateShippingEnabled && from.HasItems && from.IsShippingRequired;
 
                 if (to.EstimateShipping.Enabled)
                 {
@@ -410,7 +390,7 @@ namespace Smartstore.Web.Models.Cart
 
                     to.EstimateShipping.AvailableStates = stateProvinces.ToSelectListItems(defaultStateProvinceId ?? 0) ?? new List<SelectListItem>
                     {
-                        new SelectListItem { Text = T("Address.OtherNonUS"), Value = "0" }
+                        new() { Text = T("Address.OtherNonUS"), Value = "0" }
                     };
 
                     if (setEstimateShippingDefaultAddress && customer.ShippingAddress != null)
@@ -424,25 +404,21 @@ namespace Smartstore.Web.Models.Cart
 
             #region Cart items
 
-            var allProducts = from.Items
-                .Select(x => x.Item.Product)
-                .Union(from.Items.Select(x => x.ChildItems).SelectMany(child => child.Select(x => x.Item.Product)))
-                .ToArray();
-
-            var batchContext = _productService.CreateProductBatchContext(allProducts, null, customer, false);
+            var batchContext = _productService.CreateProductBatchContext(from.GetAllProducts(), null, customer, false);
             var subtotal = await _orderCalculationService.GetShoppingCartSubtotalAsync(from, null, batchContext);
 
-            dynamic itemParameters = new ExpandoObject();
+            dynamic itemParameters = new GracefulDynamicObject();
+            //itemParameters.TaxFormat = parameters?.IsOffcanvas == true ? _taxService.GetTaxFormat() : null;
             itemParameters.TaxFormat = _taxService.GetTaxFormat();
             itemParameters.BatchContext = batchContext;
             itemParameters.CartSubtotal = subtotal;
+            itemParameters.Cart = from;
+            itemParameters.CachedBrands = new Dictionary<int, BrandOverviewModel>();
 
             foreach (var cartItem in from.Items)
             {
                 var model = new ShoppingCartModel.ShoppingCartItemModel();
-
                 await cartItem.MapAsync(model, (object)itemParameters);
-
                 to.AddItems(model);
             }
 
@@ -452,77 +428,61 @@ namespace Smartstore.Web.Models.Cart
 
             if (prepareAndDisplayOrderReviewData)
             {
-                var checkoutState = _checkoutStateAccessor.CheckoutState;
-
                 to.OrderReviewData.Display = true;
+                to.OrderReviewData.IsBillingAddressRequired = isBillingAddresRequired;
 
                 // Billing info.
-                var billingAddress = customer.BillingAddress;
-                if (billingAddress != null)
+                if (customer.BillingAddress != null && to.OrderReviewData.IsBillingAddressRequired)
                 {
-                    await MapperFactory.MapAsync(billingAddress, to.OrderReviewData.BillingAddress);
+                    to.OrderReviewData.BillingAddress = await MapperFactory.MapAsync<Address, AddressModel>(customer.BillingAddress);
                 }
 
                 // Shipping info.
-                if (from.IsShippingRequired())
+                if (from.IsShippingRequired)
                 {
                     to.OrderReviewData.IsShippable = true;
+                    to.OrderReviewData.ShippingMethod = customer.GenericAttributes.SelectedShippingOption?.Name;
+                    to.OrderReviewData.DisplayShippingMethodChangeOption = (customer.GenericAttributes.OfferedShippingOptions?.Count ?? int.MaxValue) > 1;
 
-                    var shippingAddress = customer.ShippingAddress;
-                    if (shippingAddress != null)
+                    if (customer.ShippingAddress != null)
                     {
-                        await MapperFactory.MapAsync(shippingAddress, to.OrderReviewData.ShippingAddress);
-                    }
-
-                    // Selected shipping method.
-                    var shippingOption = customer.GenericAttributes.SelectedShippingOption;
-                    if (shippingOption != null)
-                    {
-                        to.OrderReviewData.ShippingMethod = shippingOption.Name;
-                    }
-
-                    if (checkoutState != null && checkoutState.CustomProperties.ContainsKey("HasOnlyOneActiveShippingMethod"))
-                    {
-                        to.OrderReviewData.DisplayShippingMethodChangeOption = !(bool)checkoutState.CustomProperties.Get("HasOnlyOneActiveShippingMethod");
+                        to.OrderReviewData.ShippingAddress = await MapperFactory.MapAsync<Address, AddressModel>(customer.ShippingAddress);
                     }
                 }
 
-                if (checkoutState != null && checkoutState.CustomProperties.ContainsKey("HasOnlyOneActivePaymentMethod"))
-                {
-                    to.OrderReviewData.DisplayPaymentMethodChangeOption = !(bool)checkoutState.CustomProperties.Get("HasOnlyOneActivePaymentMethod");
-                }
+                var state = _checkoutStateAccessor.CheckoutState;
+                var paymentMethod = await _paymentService.LoadPaymentProviderBySystemNameAsync(customer.GenericAttributes.SelectedPaymentMethod);
 
-                var selectedPaymentMethodSystemName = customer.GenericAttributes.SelectedPaymentMethod;
-                var paymentMethod = await _paymentService.LoadPaymentProviderBySystemNameAsync(selectedPaymentMethodSystemName);
+                to.OrderReviewData.PaymentMethod = paymentMethod != null ? _moduleManager.GetLocalizedFriendlyName(paymentMethod.Metadata).NullEmpty() : null;
+                to.OrderReviewData.PaymentMethod ??= customer.GenericAttributes.SelectedPaymentMethod;
+                to.OrderReviewData.PaymentSummary = state.PaymentSummary;
+                to.OrderReviewData.IsPaymentSelectionSkipped = state.IsPaymentSelectionSkipped;
+                to.OrderReviewData.IsPaymentRequired = state.IsPaymentRequired && isPaymentRequired;
 
-                to.OrderReviewData.PaymentMethod = paymentMethod != null ? _moduleManager.GetLocalizedFriendlyName(paymentMethod.Metadata) : string.Empty;
-                to.OrderReviewData.PaymentSummary = checkoutState.PaymentSummary;
-                to.OrderReviewData.IsPaymentSelectionSkipped = checkoutState.IsPaymentSelectionSkipped;
+                state.CustomProperties.TryGetValueAs("HasOnlyOneActivePaymentMethod", out bool singlePaymentMethod);
+                to.OrderReviewData.DisplayPaymentMethodChangeOption = !singlePaymentMethod;
             }
 
             #endregion
 
-            var boundPaymentMethods = await _paymentService.LoadActivePaymentProvidersAsync(
+            var paymentMethods = await _paymentService.LoadActivePaymentProvidersAsync(
                 from,
                 store.Id,
-                new[] { PaymentMethodType.Button, PaymentMethodType.StandardAndButton },
+                [PaymentMethodType.Button, PaymentMethodType.StandardAndButton],
                 false);
 
-            var bpmModel = new ButtonPaymentMethodModel();
-
-            foreach (var boundPaymentMethod in boundPaymentMethods)
+            if (from.ContainsRecurringItem())
             {
-                if (from.IncludesMatchingItems(x => x.IsRecurring) &&
-                    boundPaymentMethod.Value.RecurringPaymentType == RecurringPaymentType.NotSupported)
-                {
-                    continue;
-                }
-
-                var widget = boundPaymentMethod.Value.GetPaymentInfoWidget();
-                bpmModel.Items.Add(widget);
+                paymentMethods = paymentMethods.Where(x => x.Value.RecurringPaymentType > RecurringPaymentType.NotSupported);
             }
 
-            to.ButtonPaymentMethods = bpmModel;
+            foreach (var paymentMethod in paymentMethods)
+            {
+                var widget = paymentMethod.Value.GetPaymentInfoWidget();
+                to.ButtonPaymentMethods.Items.Add(widget);
+            }
+
+            batchContext.Clear();
         }
     }
 }

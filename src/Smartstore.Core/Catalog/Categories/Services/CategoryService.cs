@@ -19,11 +19,11 @@ namespace Smartstore.Core.Catalog.Categories
         internal static TimeSpan CategoryTreeCacheDuration = TimeSpan.FromHours(6);
 
         // {0} = IncludeHidden, {1} = CustomerRoleIds, {2} = StoreId
-        internal const string CategoryTreeKey = "category:tree-{0}-{1}-{2}";
+        internal readonly static CompositeFormat CategoryTreeKey = CompositeFormat.Parse("category:tree-{0}-{1}-{2}");
         internal const string CategoryTreePatternKey = "category:tree-*";
 
         // {0} = IncludeHidden, {1} = CustomerId, {2} = StoreId, {3} ParentCategoryId
-        const string CategoriesByParentIdKey = "category:byparent-{0}-{1}-{2}-{3}";
+        internal readonly static CompositeFormat CategoriesByParentIdKey = CompositeFormat.Parse("category:byparent-{0}-{1}-{2}-{3}");
         internal const string CategoriesPatternKey = "category:*";
 
         private readonly SmartDbContext _db;
@@ -324,7 +324,7 @@ namespace Smartstore.Core.Catalog.Categories
         {
             Guard.NotNull(productIds);
 
-            if (!productIds.Any())
+            if (productIds.Length == 0)
             {
                 return new List<ProductCategory>();
             }
@@ -338,9 +338,7 @@ namespace Smartstore.Core.Catalog.Categories
 
             var productCategoriesQuery = _db.ProductCategories
                 .AsNoTracking()
-                .AsSplitQuery()
-                .Include(x => x.Category).ThenInclude(x => x.MediaFile)
-                .Include(x => x.Category).ThenInclude(x => x.AppliedDiscounts);
+                .Include(x => x.Category);
 
             var query =
                 from pc in productCategoriesQuery
@@ -418,6 +416,47 @@ namespace Smartstore.Core.Catalog.Categories
             treeNode.SetContextMetadata(lookupKey, path);
 
             return path;
+        }
+
+        public async static Task<int> RebuidTreePathsAsync(SmartDbContext context, CancellationToken cancelToken = default)
+        {
+            var numAffected = 0;
+            var folders = await context.MediaFolders
+                .Include(x => x.Children)
+                .Where(x => x.ParentId == null)
+                .ToListAsync(cancelToken);
+
+            foreach (var folder in folders)
+            {
+                BuildTreePath(folder);
+            }
+            numAffected = await context.SaveChangesAsync(cancelToken);
+
+            var categories = await context.Categories
+                .Include(x => x.Children)
+                .Where(x => x.ParentId == null)
+                .ToListAsync(cancelToken);
+
+            foreach (var category in categories)
+            {
+                BuildTreePath(category);
+            }
+            numAffected += await context.SaveChangesAsync(cancelToken);
+
+            return numAffected;
+
+            static void BuildTreePath(ITreeNode node)
+            {
+                node.TreePath = node.BuildTreePath();
+                var childNodes = node.GetChildNodes();
+                if (!childNodes.IsNullOrEmpty())
+                {
+                    foreach (var childNode in childNodes)
+                    {
+                        BuildTreePath(childNode);
+                    }
+                }
+            }
         }
 
         public async Task<TreeNode<ICategoryNode>> GetCategoryTreeAsync(int rootCategoryId = 0, bool includeHidden = false, int storeId = 0)

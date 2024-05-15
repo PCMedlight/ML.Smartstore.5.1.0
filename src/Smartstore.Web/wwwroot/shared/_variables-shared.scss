@@ -1,4 +1,4 @@
-/// <reference path="../lib/bs4/scss/bootstrap-reboot.scss" />
+/// <reference path="../lib/bootstrap/scss/bootstrap-reboot.scss" />
 
 //
 // General
@@ -99,6 +99,7 @@ $form-check-input-indeterminate-bg-image:       url("data:image/svg+xml,<svg xml
 $dropdown-font-size:		$font-size-sm !default;
 $dropdown-font-weight:	    $font-weight-normal !default;
 $dropdown-icon-color:		mix($gray-600, $gray-700, 50%) !default;
+$dropdown-shadow-intensity: 0.85 !default;
 
 
 // Modal
@@ -112,23 +113,23 @@ $modal-title-color:         inherit !default;
 
 $offcanvas-width:               320px !default;
 $offcanvas-width-lg:            480px !default;
-$offcanvas-easing:              ease-out !default;
+$offcanvas-easing:              $ease-out-quad !default;
 $offcanvas-duration:            0.3s !default;
 $offcanvas-offset:              0.3 !default;
 $offcanvas-offset-p:            $offcanvas-offset * 100% !default;
 $offcanvas-offset-p-neg:        ($offcanvas-offset * 100) * -1% !default;
 $offcanvas-z-index:             99999 !default;
-$offcanvas-shadow:              0 0 24px rgba(#000, 0.3) !default;
+$offcanvas-shadow:              0 0 24px rgba($black, 0.3) !default;
 
 
 // Shadows
 // --------------------------------------------------
 
 $shadow-intensity:              1 !default;
-$box-shadow-xs:                 0 1px 8px -2px rgba(var(--shadow-colorbase-rgb), calc(var(--shadow-intensity) * 0.12)), 
-                                0 1px 1px -2px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.3)) !default;
-$box-shadow-xl:                 0 17px 70px -7px rgba(var(--shadow-colorbase-rgb), calc(var(--shadow-intensity) * 0.14)), 
-                                0 20px 48px -12px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.22)) !default;
+$box-shadow-xs:                 0 calc(1px * var(--shadow-yoffset, 1)) 8px -2px rgba(var(--shadow-colorbase-rgb), calc(var(--shadow-intensity) * 0.12)), 
+                                0 calc(1px * var(--shadow-yoffset, 1)) 1px -2px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.3)) !default;
+$box-shadow-xl:                 0 calc(17px * var(--shadow-yoffset, 1)) 70px -7px rgba(var(--shadow-colorbase-rgb), calc(var(--shadow-intensity) * 0.14)), 
+                                0 calc(20px * var(--shadow-yoffset, 1)) 48px -12px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.22)) !default;
 
 $utilities: map-merge(
     $utilities,
@@ -355,6 +356,7 @@ $fa-free-regular-icons: (
 
 $clr-brand-facebook:            #1778F2 !default;
 $clr-brand-twitter:             #55acee !default;
+$clr-brand-x-twitter:           #000000 !default;
 $clr-brand-github:              #bd2c00 !default;
 $clr-brand-github2:             #ff9933 !default;
 $clr-brand-github3:             #4183c4 !default;

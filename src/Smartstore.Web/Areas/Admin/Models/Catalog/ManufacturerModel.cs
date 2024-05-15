@@ -37,7 +37,7 @@ namespace Smartstore.Admin.Models.Catalog
         public string SeName { get; set; }
 
         [UIHint("Media")]
-        [AdditionalMetadata("album", "catalog"), AdditionalMetadata("transientUpload", true)]
+        [AdditionalMetadata("album", "catalog"), AdditionalMetadata("transientUpload", true), AdditionalMetadata("entityType", "Manufacturer")]
         [LocalizedDisplay("*Picture")]
         public int? PictureId { get; set; }
 
@@ -68,6 +68,7 @@ namespace Smartstore.Admin.Models.Catalog
         public List<ManufacturerLocalizedModel> Locales { get; set; } = new();
 
         public string EditUrl { get; set; }
+        public string ManufacturerUrl { get; set; }
 
         // ACL.
         [UIHint("CustomerRoles")]

@@ -3,6 +3,7 @@ using Smartstore.Core.Catalog;
 using Smartstore.Core.Catalog.Attributes;
 using Smartstore.Core.Catalog.Pricing;
 using Smartstore.Core.Checkout.Cart;
+using Smartstore.Core.Common.Services;
 
 namespace Smartstore.Web.Models.Cart
 {
@@ -19,10 +20,18 @@ namespace Smartstore.Web.Models.Cart
         public WishlistItemModelMapper(
             ICommonServices services,
             IPriceCalculationService priceCalculationService,
+            IDeliveryTimeService deliveryTimeService,
             IProductAttributeMaterializer productAttributeMaterializer,
             ShoppingCartSettings shoppingCartSettings,
-            CatalogSettings catalogSettings)
-            : base(services, priceCalculationService, productAttributeMaterializer, shoppingCartSettings, catalogSettings)
+            CatalogSettings catalogSettings,
+            CatalogHelper catalogHelper)
+            : base(services, 
+                  priceCalculationService, 
+                  deliveryTimeService,
+                  productAttributeMaterializer, 
+                  shoppingCartSettings, 
+                  catalogSettings, 
+                  catalogHelper)
         {
         }
 
@@ -31,8 +40,8 @@ namespace Smartstore.Web.Models.Cart
 
         public override async Task MapAsync(OrganizedShoppingCartItem from, WishlistModel.WishlistItemModel to, dynamic parameters = null)
         {
-            Guard.NotNull(from, nameof(from));
-            Guard.NotNull(to, nameof(to));
+            Guard.NotNull(from);
+            Guard.NotNull(to);
 
             await base.MapAsync(from, to, (object)parameters);
 

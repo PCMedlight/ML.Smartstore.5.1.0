@@ -68,6 +68,11 @@ namespace Smartstore.Core.Catalog
         public bool ShowLinkedAttributeValueImage { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value indicating whether to display product tags on the product detail page.
+        /// </summary>
+        public bool ShowProductTags { get; set; } = true;
+
+        /// <summary>
 		/// Gets or sets a value indicating how many menu items will be displayed
 		/// </summary>
         public int? MaxItemsToDisplayInCatalogMenu { get; set; }
@@ -126,16 +131,6 @@ namespace Smartstore.Core.Catalog
         /// An option indicating whether sub pages should display the category/manufacturer description
         /// </summary>
         public bool ShowDescriptionInSubPages { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether a 'Share button' is enabled
-        /// </summary>
-        public bool ShowShareButton { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets a share code (e.g. AddThis button code)
-        /// </summary>
-        public string PageShareCode { get; set; } = "<!-- AddThis Button BEGIN --><div class=\"addthis_toolbox addthis_default_style addthis_32x32_style\"><a class=\"addthis_button_preferred_1\"></a><a class=\"addthis_button_preferred_2\"></a><a class=\"addthis_button_preferred_3\"></a><a class=\"addthis_button_preferred_4\"></a><a class=\"addthis_button_compact\"></a><a class=\"addthis_counter addthis_bubble_style\"></a></div><script type=\"text/javascript\">var addthis_config = {\"data_track_addressbar\":false};</script><script type=\"text/javascript\" src=\"//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50f6c18f03ecbb2f\"></script><!-- AddThis Button END -->";
 
         /// <summary>
         /// Gets or sets a value indicating whether to display reviews in product lists
@@ -312,6 +307,9 @@ namespace Smartstore.Core.Catalog
         /// </summary>
         public bool AllowCustomersToSelectPageSize { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the threshold above which only images that are not assigned to any or the selected attribute combination are displayed.
+        /// </summary>
         public int DisplayAllImagesNumber { get; set; } = 6;
 
         public bool ShowManufacturerInGridStyleLists { get; set; } = true;
@@ -320,6 +318,11 @@ namespace Smartstore.Core.Catalog
         /// Whether to show brand logo instead of textual name in product lists
         /// </summary>
         public bool ShowManufacturerLogoInLists { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the manufacturer logo should be linked in product lists.
+        /// </summary>
+        public bool LinkManufacturerLogoInLists { get; set; } = true;
 
         public bool ShowShortDescriptionInGridStyleLists { get; set; } = true;
 
@@ -398,7 +401,7 @@ namespace Smartstore.Core.Catalog
         public int HtmlTextCollapsedHeight { get; set; } = 260;
 
         /// <summary>
-        /// Gets or sets an identifier for a delivery time dislayed when stock is empty
+        /// Gets or sets the identifier of a delivery time displayed when the stock is empty.
         /// </summary>
         public int? DeliveryTimeIdForEmptyStock { get; set; }
 

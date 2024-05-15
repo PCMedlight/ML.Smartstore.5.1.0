@@ -139,6 +139,12 @@ namespace Smartstore.Web.Controllers
             AddRobotsLines(sb, disallows, false);
             AddRobotsLines(sb, _seoSettings.ExtraRobotsAllows.Select(x => x.Trim()), true);
 
+            // Append custom lines
+            if (_seoSettings.ExtraRobotsLines.HasValue())
+            {
+                sb.Append(_seoSettings.ExtraRobotsLines);
+            }
+
             return Content(sb.ToString(), "text/plain");
         }
 
@@ -263,9 +269,11 @@ namespace Smartstore.Web.Controllers
             {
                 model.AnalyticsConsent = true;
                 model.ThirdPartyConsent = true;
+                model.AdUserDataConsent = true;
+                model.AdPersonalizationConsent = true;
             }
 
-            _cookieConsentManager.SetConsentCookie(model.AnalyticsConsent, model.ThirdPartyConsent);
+            _cookieConsentManager.SetConsentCookie(model.AnalyticsConsent, model.ThirdPartyConsent, model.AdUserDataConsent, model.AdPersonalizationConsent);
 
             if (!HttpContext.Request.IsAjax())
             {

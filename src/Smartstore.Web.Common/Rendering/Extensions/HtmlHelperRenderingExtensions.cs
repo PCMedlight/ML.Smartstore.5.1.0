@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Smartstore.Core.Content.Blocks;
 using Smartstore.Core.Localization;
 using Smartstore.Utilities;
 using Smartstore.Web.Modelling;
@@ -19,7 +20,7 @@ namespace Smartstore.Web.Rendering
     public static class HtmlHelperRenderingExtensions
     {
         // Get the protected "HtmlHelper.GenerateEditor" method
-        private readonly static MethodInfo GenerateEditorMethod = typeof(HtmlHelper).GetMethod("GenerateEditor", BindingFlags.NonPublic | BindingFlags.Instance);
+        private readonly static MethodInvoker GenerateEditorMethodInvoker = typeof(HtmlHelper).GetMethod("GenerateEditor", BindingFlags.NonPublic | BindingFlags.Instance).CreateInvoker();
 
         #region EditorFor
 
@@ -67,13 +68,11 @@ namespace Smartstore.Web.Rendering
 
             if (helper is HtmlHelper htmlHelper)
             {
-                return (IHtmlContent)GenerateEditorMethod.Invoke(htmlHelper, new object[]
-                {
+                return (IHtmlContent)GenerateEditorMethodInvoker.Invoke(htmlHelper,
                     expression.ModelExplorer,
                     htmlFieldName ?? expression.Name,
                     templateName,
-                    additionalViewData
-                });
+                    additionalViewData);
             }
             else
             {
@@ -269,38 +268,52 @@ namespace Smartstore.Web.Rendering
         public static IHtmlContent ColorBoxFor(
             this IHtmlHelper helper,
             ModelExpression expression,
-            string defaultColor = null)
+            string defaultColor = null,
+            bool swatches = true)
         {
             Guard.NotNull(expression);
 
-            return ColorBox(helper, expression.Name, expression.Model?.ToString().EmptyNull(), defaultColor);
+            return ColorBox(
+                helper, 
+                expression.Name, 
+                expression.Model?.ToString().EmptyNull(), 
+                defaultColor, 
+                swatches);
         }
 
         public static IHtmlContent ColorBoxFor<TModel>(
             this IHtmlHelper<TModel> helper,
             Expression<Func<TModel, string>> expression,
-            string defaultColor = null)
+            string defaultColor = null,
+            bool swatches = true)
         {
             Guard.NotNull(expression);
 
-            return ColorBox(helper, helper.NameFor(expression), helper.ValueFor(expression), defaultColor);
+            return ColorBox(
+                helper, 
+                helper.NameFor(expression), 
+                helper.ValueFor(expression), 
+                defaultColor, 
+                swatches);
         }
 
         public static IHtmlContent ColorBox(
             this IHtmlHelper helper,
             string name,
             string color,
-            string defaultColor = null)
+            string defaultColor = null,
+            bool swatches = true)
         {
             defaultColor = defaultColor.EmptyNull();
             var isDefault = color.EqualsNoCase(defaultColor);
 
             var builder = new SmartHtmlContentBuilder();
 
-            builder.AppendHtml("<div class='input-group colorpicker-component sm-colorbox edit-control' data-fallback-color='{0}' data-editor='color'>".FormatInvariant(defaultColor));
+            builder.AppendHtml(
+                $"<div class='input-group colorpicker-component edit-control' data-swatches='{swatches.ToString().ToLower()}' data-fallback-color='{defaultColor}' data-editor='color'>");
 
-            builder.AppendHtml(helper.TextBox(name, isDefault ? string.Empty : color, new { @class = "form-control colorval", placeholder = defaultColor }));
-            builder.AppendFormat("<div class='input-group-append'><button type='button' class='input-group-text btn btn-light'><i class='thecolor' style='{0}'>&nbsp;</i></button></div>", defaultColor.HasValue() ? "background-color: " + defaultColor : string.Empty);
+            builder.AppendHtml(helper.TextBox(name, isDefault ? string.Empty : color, new { @class = "form-control", placeholder = defaultColor }));
+            builder.AppendFormat("<div class='input-group-append'><button type='button' class='input-group-text colorpicker-input-addon btn btn-light'><i class='thecolor' style='{0}'>&nbsp;</i></button></div>", defaultColor.HasValue() ? "background-color: " + defaultColor : string.Empty);
 
             builder.AppendHtml("</div>");
 
@@ -626,6 +639,16 @@ namespace Smartstore.Web.Rendering
                 var wrapper = new TagBuilder("div");
                 wrapper.Attributes.Add("class", "locale-editor");
                 wrapper.Attributes.Add("style", $"--tab-caption-display-{size}: inline");
+
+                // BEGIN: AI
+                if (helper.ViewData.Model is EntityModelBase { EntityId: > 0 } || (helper.ViewData.Model is ILocalizedModel && helper.ViewData.Model is IBlock))
+                {
+                    var aiToolHtmlGenerator = services.GetRequiredService<AIToolHtmlGenerator>();
+                    var translationDropdown = aiToolHtmlGenerator.GenerateTranslationTool(tabs.FirstOrDefault().Content.ToString());
+
+                    wrapper.InnerHtml.AppendHtml(translationDropdown);
+                }
+                // END: AI
 
                 return stripOutput.WrapElementWith(wrapper);
             }

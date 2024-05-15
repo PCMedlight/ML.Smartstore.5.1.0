@@ -1,7 +1,9 @@
 ﻿using System.Collections.Immutable;
+using Autofac;
 using Smartstore.Caching;
 using Smartstore.Collections;
 using Smartstore.Core.Catalog.Attributes;
+using Smartstore.Core.Catalog.Brands;
 using Smartstore.Core.Catalog.Categories;
 using Smartstore.Core.Catalog.Discounts;
 using Smartstore.Core.Checkout.Orders;
@@ -25,7 +27,7 @@ namespace Smartstore.Core.Catalog.Products
         private readonly IStoreContext _storeContext;
         private readonly IEventPublisher _eventPublisher;
         private readonly ICacheManager _cache;
-        private readonly ICommonServices _services;
+        private readonly IComponentContext _componentContext;
         private readonly Lazy<IProductTagService> _productTagService;
         private readonly IProductAttributeMaterializer _productAttributeMaterializer;
         private readonly IUrlService _urlService;
@@ -38,7 +40,7 @@ namespace Smartstore.Core.Catalog.Products
             IStoreContext storeContext,
             IEventPublisher eventPublisher,
             ICacheManager cache,
-            ICommonServices services,
+            IComponentContext componentContext,
             Lazy<IProductTagService> productTagService,
             IProductAttributeMaterializer productAttributeMaterializer,
             IUrlService urlService,
@@ -50,7 +52,7 @@ namespace Smartstore.Core.Catalog.Products
             _storeContext = storeContext;
             _eventPublisher = eventPublisher;
             _cache = cache;
-            _services = services;
+            _componentContext = componentContext;
             _productTagService = productTagService;
             _productAttributeMaterializer = productAttributeMaterializer;
             _urlService = urlService;
@@ -294,7 +296,9 @@ namespace Smartstore.Core.Catalog.Products
                     // SaveChanges is not necessary because SendQuantityBelowStoreOwnerNotificationAsync
                     // does not reload anything that has been changed in the meantime.
 
-                    if (decrease && product.NotifyAdminForQuantityBelow > result.StockQuantityNew)
+                    if (decrease
+                        && result.StockQuantityOld != result.StockQuantityNew
+                        && product.NotifyAdminForQuantityBelow > result.StockQuantityNew)
                     {
                         await _messageFactory.SendQuantityBelowStoreOwnerNotificationAsync(product, _localizationSettings.DefaultAdminLanguageId);
                     }
@@ -480,7 +484,8 @@ namespace Smartstore.Core.Catalog.Products
         {
             return new ProductBatchContext(
                 products,
-                _services,
+                _db,
+                _componentContext,
                 store ?? _storeContext.CurrentStore,
                 customer ?? _workContext.CurrentCustomer,
                 includeHidden,
@@ -519,6 +524,8 @@ namespace Smartstore.Core.Catalog.Products
             {
                 await _productTagService.Value.ClearCacheAsync();
                 await _cache.RemoveByPatternAsync(CategoryService.CategoryTreePatternKey);
+                await _eventPublisher.PublishAsync(new CategoryTreeChangedEvent(CategoryTreeChangeReason.Hierarchy), cancelToken);
+                await _eventPublisher.PublishAsync(new CategoryTreeChangedEvent(CategoryTreeChangeReason.ElementCounts), cancelToken);
             }
 
             return success;
@@ -588,8 +595,7 @@ namespace Smartstore.Core.Catalog.Products
             {
                 foreach (var product in productsWithMissingSlug)
                 {
-                    var validateSlugResult = await _urlService.ValidateSlugAsync(product, null, product.Name, true);
-                    await _urlService.ApplySlugAsync(validateSlugResult);
+                    var validateSlugResult = await _urlService.SaveSlugAsync(product, null, product.Name, true);
                 }
 
                 await _db.SaveChangesAsync(cancelToken);
@@ -606,7 +612,9 @@ namespace Smartstore.Core.Catalog.Products
                 .Where(x => deletedManufacturerIdsQuery.Contains(x.Id))
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(x => x.Deleted, false)
-                    .SetProperty(x => x.UpdatedOnUtc, now), cancelToken);
+                    .SetProperty(x => x.UpdatedOnUtc, now)
+                    .SetProperty(x => x.Published, x => publishAfterRestore != null ? publishAfterRestore.Value : x.Published),
+                    cancelToken);
 
             // Restore categories.
             var restoreCategoryIds = new HashSet<int>();
@@ -625,7 +633,9 @@ namespace Smartstore.Core.Catalog.Products
                     .Where(x => restoreCategoryIds.Contains(x.Id) && x.Deleted)
                     .ExecuteUpdateAsync(setters => setters
                         .SetProperty(x => x.Deleted, false)
-                        .SetProperty(x => x.UpdatedOnUtc, now), cancelToken);
+                        .SetProperty(x => x.UpdatedOnUtc, now)
+                        .SetProperty(x => x.Published, x => publishAfterRestore != null ? publishAfterRestore.Value : x.Published),
+                        cancelToken);
             }
 
             void GetCategoryIds(int categoryId)
@@ -681,7 +691,15 @@ namespace Smartstore.Core.Catalog.Products
 
                     foreach (var entitiesDeleted in deletionEvent.EntitiesDeletedCallbacks)
                     {
-                        await entitiesDeleted(cancelToken);
+                        try
+                        {
+                            await entitiesDeleted(cancelToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex);
+                            result.Errors.Add(ex.Message);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -795,10 +813,6 @@ namespace Smartstore.Core.Catalog.Products
 
             // ----- Finally delete products.
             // If we have forgotten something, this will lead to an exception.
-
-            // TODO: (mg) Plugins: DependingPrices, FileManagerRecords, FileManagerTabRecords, GoogleProduct, IndexBacklog, PageStoryBlock, PersonalPromo,
-            // ShopConnectorSkuMapping
-
             await _db.Products
                 .IgnoreQueryFilters()
                 .Where(x => productIds.Contains(x.Id))

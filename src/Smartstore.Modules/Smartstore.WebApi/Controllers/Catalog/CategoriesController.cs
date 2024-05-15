@@ -1,24 +1,26 @@
-﻿using Smartstore.Core.Catalog.Categories;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.OData.Formatter;
+using Smartstore.Core.Catalog.Categories;
 using Smartstore.Core.Catalog.Discounts;
 using Smartstore.Core.Content.Media;
-using Smartstore.Core.Seo;
 
 namespace Smartstore.Web.Api.Controllers
 {
     /// <summary>
     /// The endpoint for operations on Category entity.
     /// </summary>
+    [WebApiGroup(WebApiGroupNames.Catalog)]
     public class CategoriesController : WebApiController<Category>
     {
-        private readonly Lazy<IUrlService> _urlService;
         private readonly Lazy<ICategoryService> _categoryService;
+        private readonly Lazy<IDiscountService> _discountService;
 
         public CategoriesController(
-            Lazy<IUrlService> urlService,
-            Lazy<ICategoryService> categoryService)
+            Lazy<ICategoryService> categoryService,
+            Lazy<IDiscountService> discountService)
         {
-            _urlService = urlService;
             _categoryService = categoryService;
+            _discountService = discountService;
         }
 
         [HttpGet("Categories"), ApiQueryable]
@@ -56,7 +58,7 @@ namespace Smartstore.Web.Api.Controllers
             return PostAsync(model, async () =>
             {
                 await Db.SaveChangesAsync();
-                await UpdateSlug(model);
+                await UpdateSlugAsync(model);
             });
         }
 
@@ -67,7 +69,7 @@ namespace Smartstore.Web.Api.Controllers
             return PutAsync(key, model, async (entity) =>
             {
                 await Db.SaveChangesAsync();
-                await UpdateSlug(entity);
+                await UpdateSlugAsync(entity);
             });
         }
 
@@ -78,7 +80,7 @@ namespace Smartstore.Web.Api.Controllers
             return PatchAsync(key, model, async (entity) =>
             {
                 await Db.SaveChangesAsync();
-                await UpdateSlug(entity);
+                await UpdateSlugAsync(entity);
             });
         }
 
@@ -92,10 +94,36 @@ namespace Smartstore.Web.Api.Controllers
             });
         }
 
-        private async Task UpdateSlug(Category entity)
+        /// <summary>
+        /// Adds or removes discounts assigments.
+        /// </summary>
+        /// <remarks>
+        /// Identifiers of discounts that are not included in **discountIds** are assigned to the category.
+        /// Existing assignments to discounts that are not included in **discountIds** are removed.
+        /// </remarks>
+        /// <param name="discountIds">List of discount identifiers to apply.</param>
+        [HttpPost("Categories({key})/ApplyDiscounts"), ApiQueryable]
+        [Permission(Permissions.Catalog.Category.Update)]
+        [Consumes(Json), Produces(Json)]
+        [ProducesResponseType(typeof(IQueryable<Discount>), Status200OK)]
+        [ProducesResponseType(Status422UnprocessableEntity)]
+        public async Task<IActionResult> ApplyDiscounts(int key,
+            [FromODataBody, Required] IEnumerable<int> discountIds)
         {
-            var slugResult = await _urlService.Value.ValidateSlugAsync(entity, string.Empty, true);
-            await _urlService.Value.ApplySlugAsync(slugResult, true);
+            try
+            {
+                var entity = await GetRequiredById(key, q => q.Include(x => x.AppliedDiscounts));
+                if (await _discountService.Value.ApplyDiscountsAsync(entity, discountIds.ToArray(), DiscountType.AssignedToCategories))
+                {
+                    await Db.SaveChangesAsync();
+                }
+
+                return Ok(entity.AppliedDiscounts.AsQueryable());
+            }
+            catch (Exception ex)
+            {
+                return ErrorResult(ex);
+            }
         }
     }
 }

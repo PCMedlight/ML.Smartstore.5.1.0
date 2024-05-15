@@ -8,30 +8,27 @@
 		<UserSecretsId>b35c0f56-dfa8-4120-b29b-a677578afcd1</UserSecretsId>
 		<CopyRefAssembliesToPublishDirectory>true</CopyRefAssembliesToPublishDirectory>
 		<RuntimeIdentifiers>win-x64; win-x86; linux-x64; osx-x64</RuntimeIdentifiers>
+        <ProvideApplicationPartFactoryAttributeTypeName>Smartstore.Engine.Modularity.ApplicationParts.HostRazorAssemblyPartFactory, Smartstore</ProvideApplicationPartFactoryAttributeTypeName>
 		<!--<PublishReadyToRun>true</PublishReadyToRun>-->
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
-		<PackageReference Include="Azure.Core" Version="1.33.0" />
+		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
+		<PackageReference Include="Azure.Core" Version="1.39.0" />
 		<PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.8" />
-		<PackageReference Include="Microsoft.ClearScript.V8" Version="7.4.2" />
-		<PackageReference Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.4.2" />
-		<PackageReference Include="Microsoft.ClearScript.V8.Native.osx-x64" Version="7.4.2" />
-		<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.4.2" />
-		<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x86" Version="7.4.2" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.8">
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.4" />
+		<PackageReference Include="Microsoft.ClearScript.V8" Version="7.4.5" />
+		<PackageReference Include="Microsoft.ClearScript.V8.Native.linux-x64" Version="7.4.5" />
+		<PackageReference Include="Microsoft.ClearScript.V8.Native.osx-x64" Version="7.4.5" />
+		<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x64" Version="7.4.5" />
+		<PackageReference Include="Microsoft.ClearScript.V8.Native.win-x86" Version="7.4.5" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.2.2">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
-        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.5" />
+		<PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
+        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.8" />
 	</ItemGroup>
 
 	<ItemGroup> 
@@ -41,64 +38,16 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-		<Compile Remove="App_Data\**; Modules\**;" />
-		<Content Remove="App_Data\**; Modules\**;" />
-		<EmbeddedResource Remove="App_Data\**; Modules\**;" />
-		<None Remove="App_Data\**; Modules\**;" />
+		<Compile Remove="App_Data\**; Modules\**; Themes\**" />
+		<Content Remove="App_Data\**; Modules\**; Themes\**" />
+		<EmbeddedResource Remove="App_Data\**; Modules\**; Themes\**" />
+		<None Remove="App_Data\**; Modules\**; Themes\**" />
 	</ItemGroup>
 	
 	<!-- Copy publishable files in App_Data directory -->
 	<ItemGroup>
 		<None Include="App_Data\icons.json" CopyToPublishDirectory="PreserveNewest" />
 		<None Include="App_Data\widgetzones.json" CopyToPublishDirectory="PreserveNewest" />
-		<None Include="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Home.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Menu.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Footer\Default.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Categories.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Dropdown.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\LinkList.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\ListGroup.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Main.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Navbar.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\OffCanvasCart\Default.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Components\ShopLogo\Default.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Layouts\_Document.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Brands.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Home.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Menu.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-		<None Include="Themes\MEDlight-Theme\Views\_Layout.cshtml">
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
 		<None Include="App_Data\EmailTemplates\**" CopyToPublishDirectory="PreserveNewest" />
 		<None Include="App_Data\Geo\**" CopyToPublishDirectory="PreserveNewest" />
 		<None Include="App_Data\Localization\**" CopyToPublishDirectory="PreserveNewest" />
@@ -120,8 +69,8 @@
 
 	<!-- Copy publishable files in Themes directory -->
 	<ItemGroup>
-        <Content CopyToPublishDirectory="PreserveNewest" Exclude="Themes\*\Views\**\*.cshtml" Include="Themes\Flex\**; Themes\FlexBlack\**; Themes\FlexBlue\**" />
-        <None CopyToPublishDirectory="PreserveNewest" Include="Themes\Flex\Views\**\*.cshtml; Themes\FlexBlack\Views\**\*.cshtml; Themes\FlexBlue\Views\**\*.cshtml" />	
+        <Content CopyToPublishDirectory="PreserveNewest" Exclude="Themes\*\Views\**\*.cshtml" Include="Themes\Flex\**; Themes\MEDlight-Theme\**; Themes\FlexBlue\**" />
+        <None CopyToPublishDirectory="PreserveNewest" Include="Themes\Flex\Views\**\*.cshtml; Themes\MEDlight-Theme\Views\**\*.cshtml; Themes\FlexBlue\Views\**\*.cshtml" />	
     </ItemGroup>
 
 	<!-- Copy publishable files in Views directory -->
@@ -131,31 +80,10 @@
     
     <!-- Don't publish static/raw files -->
 	<ItemGroup>
-        <Content Remove="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Home.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Menu\OffCanvas.Menu.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Footer\Default.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Categories.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Dropdown.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\LinkList.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\ListGroup.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Main.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\Menu\Navbar.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\OffCanvasCart\Default.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Components\ShopLogo\Default.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Layouts\_Document.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Brands.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Home.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\Shared\Menu\OffCanvas.Menu.cshtml" />
-        <Content Remove="Themes\MEDlight-Theme\Views\_Layout.cshtml" />
-        <Content Remove="Views\Catalog\Components\Footer\Default.cshtml" />
-        <Content Remove="Views\Catalog\Components\Menu\Dropdown.cshtml" />
-        <Content Remove="Views\Catalog\Components\Menu\LinkList.cshtml" />
-        <Content Remove="Views\Catalog\Components\Menu\ListGroup.cshtml" />
-        <Content Remove="Views\Catalog\Components\Menu\Main.cshtml" />
-        <Content Remove="Views\Catalog\Components\Menu\Navbar.cshtml" />
         <Content Remove="wwwroot\lib\bi\bootstrap-icons-all.svg" CopyToPublishDirectory="Never" />
         <Content Remove="wwwroot\lib\fontastic\icomoon\**" CopyToPublishDirectory="Never" />
-        <TypeScriptCompile Remove="Themes\MEDlight-Theme\**" />
+        <!-- Don't publish README files in wwwroot -->
+        <None Include="wwwroot\**\README.md" CopyToPublishDirectory="Never" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -207,16 +135,6 @@
 		<ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
 		
 		<AssemblyName>Smartstore.Web</AssemblyName>
-		
-		<PackageId />
 	</PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-      <Optimize>True</Optimize>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-      <Optimize>False</Optimize>
-    </PropertyGroup>
 
 </Project>

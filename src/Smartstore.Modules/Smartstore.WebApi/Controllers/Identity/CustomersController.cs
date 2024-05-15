@@ -9,13 +9,18 @@ namespace Smartstore.Web.Api.Controllers
     /// <summary>
     /// The endpoint for operations on Customer entity.
     /// </summary>
+    [WebApiGroup(WebApiGroupNames.Identity)]
     public class CustomersController : WebApiController<Customer>
     {
         private readonly Lazy<UserManager<Customer>> _userManager;
+        private readonly Lazy<CustomerSettings> _customerSettings;
 
-        public CustomersController(Lazy<UserManager<Customer>> userManager)
+        public CustomersController(
+            Lazy<UserManager<Customer>> userManager,
+            Lazy<CustomerSettings> customerSettings)
         {
             _userManager = userManager;
+            _customerSettings = customerSettings;
         }
 
         [HttpGet("Customers"), ApiQueryable]
@@ -60,6 +65,17 @@ namespace Smartstore.Web.Api.Controllers
             return GetRelatedQuery(key, x => x.Orders);
         }
 
+        /// <summary>
+        /// Gets WalletHistory entities assigned to a Customer.
+        /// </summary>
+        /// <remarks>Only applicable if a wallet plugin is installed.</remarks>
+        [HttpGet("Customers({key})/WalletHistory"), ApiQueryable]
+        [Permission("Wallet.read")]
+        public IQueryable<WalletHistory> GetWalletHistory(int key)
+        {
+            return GetRelatedQuery(key, x => x.WalletHistory);
+        }
+
         [HttpGet("Customers({key})/ReturnRequests"), ApiQueryable]
         [Permission(Permissions.Order.ReturnRequest.Read)]
         public IQueryable<ReturnRequest> GetReturnRequests(int key)
@@ -102,6 +118,12 @@ namespace Smartstore.Web.Api.Controllers
             }
 
             model = await ApplyRelatedEntityIdsAsync(model);
+            model.PasswordFormat = _customerSettings.Value.DefaultPasswordFormat;
+
+            if (model.CustomerGuid == Guid.Empty)
+            {
+                model.CustomerGuid = Guid.NewGuid();
+            }
 
             var result = await _userManager.Value.CreateAsync(model);
             if (result.Succeeded)

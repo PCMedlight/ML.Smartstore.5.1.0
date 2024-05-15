@@ -33,6 +33,8 @@ namespace Smartstore.Admin.Models.Catalog
         public string BadgeText { get; set; }
 
         [LocalizedDisplay("*BadgeStyle")]
+        [UIHint("BadgeStyles")]
+        [AdditionalMetadata("badge-text-resource", "Common.Example")]
         public int BadgeStyle { get; set; }
 
         [LocalizedDisplay("*Alias")]
@@ -57,7 +59,7 @@ namespace Smartstore.Admin.Models.Catalog
         public int? ParentCategoryId { get; set; }
 
         [UIHint("Media")]
-        [AdditionalMetadata("album", "catalog"), AdditionalMetadata("transientUpload", true)]
+        [AdditionalMetadata("album", "catalog"), AdditionalMetadata("transientUpload", true), AdditionalMetadata("entityType", "Category")]
         [LocalizedDisplay("*Picture")]
         public int? PictureId { get; set; }
 
@@ -94,6 +96,7 @@ namespace Smartstore.Admin.Models.Catalog
         public string Breadcrumb { get; set; }
 
         public string EditUrl { get; set; }
+        public string CategoryUrl { get; set; }
 
         // ACL.
         [UIHint("CustomerRoles")]

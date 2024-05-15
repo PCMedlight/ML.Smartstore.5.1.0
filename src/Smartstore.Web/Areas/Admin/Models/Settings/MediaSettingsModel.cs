@@ -47,6 +47,9 @@ namespace Smartstore.Admin.Models
         [LocalizedDisplay("*AssociatedProductPictureSize")]
         public int AssociatedProductPictureSize { get; set; }
 
+        [LocalizedDisplay("*AssociatedProductHeaderThumbSize")]
+        public int AssociatedProductHeaderThumbSize { get; set; }
+
         [LocalizedDisplay("*BundledProductPictureSize")]
         public int BundledProductPictureSize { get; set; }
 
@@ -150,6 +153,20 @@ namespace Smartstore.Admin.Models
             // Typically, this is the same as in the settings class.
             // Otherwise you will run into a validation error if you deactivate the multistore checkbox.
             RuleFor(x => x.MaxUploadFileSize).GreaterThan(0);
+            RuleFor(x => x.MaximumImageSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.AvatarPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.ProductThumbPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.ProductDetailsPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.ProductThumbPictureSizeOnProductDetailsPage).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.MessageProductThumbPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.AssociatedProductPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.AssociatedProductHeaderThumbSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.BundledProductPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.CategoryThumbPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.ManufacturerThumbPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.CartThumbPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.CartThumbBundleItemPictureSize).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.MiniCartThumbPictureSize).GreaterThanOrEqualTo(0);
         }
     }
 

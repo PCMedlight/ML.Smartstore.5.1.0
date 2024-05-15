@@ -1,7 +1,6 @@
 "use strict";
 
 (function ($, window, document, undefined) {
-
     var PayPalButton = window.PayPalButton = (function () {
         function PayPalButton(buttonContainerSelector, funding) {
             this.buttonContainer = $(buttonContainerSelector);
@@ -81,7 +80,7 @@
                 },
                 // Create order
                 createOrder: function (data, actions) {
-                    return createOrder(self.buttonContainer.data("create-order-url"), self.buttonContainer.attr("id"));
+                    return createOrder(self.buttonContainer.data("create-order-url"), self.buttonContainer.attr("id"), self.buttonContainer.data("route-ident"));
                 },
                 // Save obtained order id in checkout state.
                 onApprove: function (data, actions) {
@@ -92,10 +91,15 @@
                 },
                 onError: function (err) {
                     console.log(err);
+
+                    // Do not display error message if no order id was passed. It means that the cart may not be valid.
+                    if (error.message.indexOf('Expected an order id to be passed') >= 0)
+                        return;
+
                     displayNotification(err, 'error');
                 }
             })
-            .render(self.buttonContainer[0]);
+                .render(self.buttonContainer[0]);
         };
 
         return PayPalButton;
@@ -159,84 +163,59 @@
                     initTransaction({ orderID: orderId }, self.hostedFieldsContainer);
                     return orderId;
                 },
-                // Save obtained order id in checkout state.
                 onApprove: function (data, actions) {
                     console.log("onApprove", data);
-                    initTransaction(data, self.hostedFieldsContainer);
                 },
                 onError: function (err) {
                     console.log(err);
                     displayNotification(err, 'error');
                 }
             }).then((cardFields) => {
-                $(".payment-method-next-step-button").on("click", function (e) {
+                $("#nextstep").on("click", function (e) {
                     var selectedPaymentSystemName = $("input[name='paymentmethod']:checked").val();
+
                     if (selectedPaymentSystemName != "Payments.PayPalCreditCard") {
                         return true;
                     }
 
+                    e.preventDefault();
+
                     if (!cardFields._state.fields.cvv.isValid
                         || !cardFields._state.fields.number.isValid
                         || !cardFields._state.fields.expirationDate.isValid) {
-                        e.preventDefault();
+                        console.log("CVV is valid: " + cardFields._state.fields.cvv.isValid);
+                        console.log("Number is valid: " + cardFields._state.fields.number.isValid);
+                        console.log("Expiration date is valid: " + cardFields._state.fields.expirationDate.isValid);
 
                         var err = self.hostedFieldsContainer.data("creditcard-error-message");
                         displayNotification(err, 'error');
 
+                        $.scrollTo($(".payment-method-item.active"), 400);
+
                         return false;
                     }
 
-                    var form = $("form[data-form-type='payment']");
-                    if (form.length == 0) {
-                        form = $(".checkout-data > form");
-                    }
+                    cardFields
+                        .submit({
+                            contingencies: ['SCA_ALWAYS']
+                        })
+                        .then(function (payload) {
+                            if (payload.liabilityShifted) {
+                                // Handle buyer confirmed 3D Secure successfully.
+                                console.log("Redirecting to confirm now");
+                                location.href = self.hostedFieldsContainer.data("forward-url");
+                            } else {
+                                console.log(payload);
+                                var err = self.hostedFieldsContainer.data("3dsecure-error-message");
+                                displayNotification(err, 'error');
+                            }
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                            displayNotification(err.message, 'error');
+                        });
 
-                    var validator = form.data('validator');
-                    if (validator) {
-                        validator.settings.ignore = "";
-                        form.validate();
-                    }
-
-                    if (form.valid()) {
-                        var getCountryCodeUrl = self.hostedFieldsContainer.data("get-country-code-url");
-                        var countryId = document.getElementById("CountryId").value;
-                        var countryCode = getCountryCode(getCountryCodeUrl, countryId);
-
-                        var stateProvince = document.getElementById("StateProvinceId");
-                        var region = stateProvince.options[stateProvince.selectedIndex].text;
-
-                        cardFields
-                            .submit({
-                                // Cardholder's first and last name
-                                cardholderName: document.getElementById("CardholderName").value,
-                                // Billing Address
-                                billingAddress: {
-                                    // Street address, line 1
-                                    streetAddress: document.getElementById("Address1").value,
-                                    // Street address, line 2 (Ex: Unit, Apartment, etc.)
-                                    extendedAddress: document.getElementById("Address2").value,
-                                    // City
-                                    locality: document.getElementById("City").value,
-                                    // Postal Code
-                                    postalCode: document.getElementById("ZipPostalCode").value,
-                                    // Country Code
-                                    countryCodeAlpha2: countryCode,
-                                    // State
-                                    region: region,
-                                },
-                            })
-                            .catch((err) => {
-                                console.log(err);
-                                displayNotification(err.message, 'error');
-                            });
-
-                        console.log("Redirecting now");
-                        location.href = self.hostedFieldsContainer.data("forward-url");
-                    }
-                    else {
-                        e.preventDefault();
-                        return false;
-                    }
+                    return false;
                 })
             });
         };
@@ -244,17 +223,22 @@
         return PayPalHostedFieldsMethod;
     })();
 
-    function createOrder(createOrderUrl, paymentSource) {
+    function createOrder(createOrderUrl, paymentSource, routeIdent) {
         var orderId;
 
         $.ajax({
             async: false,   // IMPORTANT INFO: we must wait to get the order id.
             type: 'POST',
-            data: { paymentSource: paymentSource },
+            data: $('#startcheckout').closest('form').serialize() + "&paymentSource=" + paymentSource + "&routeIdent=" + routeIdent,
             url: createOrderUrl,
             cache: false,
-            success: function (resp) {
-                orderId = resp.id;
+            success: function (response) {
+                if (response.success) {
+                    orderId = response.data.id;
+                }
+                else {
+                    displayNotification(response.message, response.messageType);
+                }
             }
         });
 
@@ -265,34 +249,22 @@
         $.ajax({
             type: 'POST',
             url: container.data("init-transaction-url"),
-            data: { orderId: data.orderID },
+            data: {
+                orderId: data.orderID,
+                routeIdent: container.data("route-ident")
+            },
             cache: false,
             success: function (resp) {
                 if (resp.success) {
-                    // Lead customer to address selection or to confirm page if PayPal was choosen from payment selection page.
-                    location.href = container.data("forward-url");
+                    if (!container.data("skip-redirect-oninit")) {
+                        // Lead customer to address selection or to confirm page if PayPal was choosen from payment selection page.
+                        location.href = container.data("forward-url");
+                    }
                 }
                 else {
                     displayNotification(resp.message, 'error');
                 }
             }
         });
-    }
-
-    function getCountryCode(getCountryCodeUrl, countryId) {
-        var countryCode;
-
-        $.ajax({
-            async: false,   // IMPORTANT INFO: we must wait to get the country code.
-            type: 'POST',
-            url: getCountryCodeUrl,
-            data: { countryId: countryId },
-            cache: false,
-            success: function (resp) {
-                countryCode = resp;
-            }
-        });
-
-        return countryCode;
     }
 })(jQuery, this, document);

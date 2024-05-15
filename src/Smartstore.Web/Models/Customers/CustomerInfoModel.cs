@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using FluentValidation;
 using Smartstore.Core.Identity;
+using Smartstore.Core.Localization;
 
 namespace Smartstore.Web.Models.Customers
 {
@@ -41,12 +42,9 @@ namespace Smartstore.Web.Models.Customers
         public string LastName { get; set; }
 
         public bool DateOfBirthEnabled { get; set; }
+
         [LocalizedDisplay("*DateOfBirth")]
-        public int? DateOfBirthDay { get; set; }
-        [LocalizedDisplay("*DateOfBirth")]
-        public int? DateOfBirthMonth { get; set; }
-        [LocalizedDisplay("*DateOfBirth")]
-        public int? DateOfBirthYear { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
         public bool CompanyEnabled { get; set; }
         public bool CompanyRequired { get; set; }
@@ -108,7 +106,13 @@ namespace Smartstore.Web.Models.Customers
         public bool DisplayVatNumber { get; set; }
 
         [LocalizedDisplay("Account.AssociatedExternalAuth")]
-        public List<AssociatedExternalAuthModel> AssociatedExternalAuthRecords { get; set; } = new();
+        public List<AssociatedExternalAuthModel> AssociatedExternalAuthRecords { get; set; } = [];
+
+        [LocalizedDisplay("*PreferredShippingMethod")]
+        public int? PreferredShippingMethodId { get; set; }
+
+        [LocalizedDisplay("*PreferredPaymentMethod")]
+        public string PreferredPaymentMethod { get; set; }
 
         public partial class AssociatedExternalAuthModel : EntityModelBase
         {
@@ -120,7 +124,7 @@ namespace Smartstore.Web.Models.Customers
 
     public class CustomerInfoValidator : SmartValidator<CustomerInfoModel>
     {
-        public CustomerInfoValidator(CustomerSettings customerSettings)
+        public CustomerInfoValidator(Localizer T, CustomerSettings customerSettings)
         {
             RuleFor(x => x.Email).NotEmpty().EmailAddress();
 
@@ -129,10 +133,16 @@ namespace Smartstore.Web.Models.Customers
             {
                 RuleFor(x => x.FirstName).NotEmpty();
             }
+
+            RuleFor(x => x.FirstName).ValidName(T);
+
             if (customerSettings.LastNameRequired)
             {
                 RuleFor(x => x.LastName).NotEmpty();
             }
+
+            RuleFor(x => x.LastName).ValidName(T);
+
             if (customerSettings.CompanyRequired && customerSettings.CompanyEnabled)
             {
                 RuleFor(x => x.Company).NotEmpty();

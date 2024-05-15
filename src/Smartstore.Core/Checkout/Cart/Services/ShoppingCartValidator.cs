@@ -1,13 +1,17 @@
 ﻿using Smartstore.Core.Catalog.Attributes;
 using Smartstore.Core.Catalog.Products;
+using Smartstore.Core.Catalog.Rules;
 using Smartstore.Core.Checkout.Attributes;
+using Smartstore.Core.Checkout.Cart.Events;
 using Smartstore.Core.Checkout.GiftCards;
 using Smartstore.Core.Common.Services;
 using Smartstore.Core.Data;
 using Smartstore.Core.Identity;
 using Smartstore.Core.Localization;
+using Smartstore.Core.Rules;
 using Smartstore.Core.Security;
 using Smartstore.Core.Stores;
+using Smartstore.Events;
 
 namespace Smartstore.Core.Checkout.Cart
 {
@@ -27,6 +31,8 @@ namespace Smartstore.Core.Checkout.Cart
         private readonly ILocalizationService _localizationService;
         private readonly IProductAttributeMaterializer _productAttributeMaterializer;
         private readonly ICheckoutAttributeMaterializer _checkoutAttributeMaterializer;
+        private readonly IRuleProviderFactory _ruleProviderFactory;
+        private readonly IEventPublisher _eventPublisher;
 
         public ShoppingCartValidator(
             SmartDbContext db,
@@ -39,7 +45,9 @@ namespace Smartstore.Core.Checkout.Cart
             IStoreMappingService storeMappingService,
             ILocalizationService localizationService,
             IProductAttributeMaterializer productAttributeMaterializer,
-            ICheckoutAttributeMaterializer checkoutAttributeMaterializer)
+            ICheckoutAttributeMaterializer checkoutAttributeMaterializer,
+            IRuleProviderFactory ruleProviderFactory,
+            IEventPublisher eventPublisher)
         {
             _db = db;
             _aclService = aclService;
@@ -52,6 +60,8 @@ namespace Smartstore.Core.Checkout.Cart
             _localizationService = localizationService;
             _productAttributeMaterializer = productAttributeMaterializer;
             _checkoutAttributeMaterializer = checkoutAttributeMaterializer;
+            _ruleProviderFactory = ruleProviderFactory;
+            _eventPublisher = eventPublisher;
         }
 
         public Localizer T { get; set; } = NullLocalizer.Instance;
@@ -112,7 +122,8 @@ namespace Smartstore.Core.Checkout.Cart
             }
 
             warnings.AddRange(currentWarnings);
-            return !currentWarnings.Any();
+
+            return currentWarnings.Count == 0;
         }
 
         public virtual async Task<bool> ValidateCartAsync(ShoppingCart cart, IList<string> warnings, bool validateCheckoutAttributes = false)
@@ -154,7 +165,7 @@ namespace Smartstore.Core.Checkout.Cart
                 if (checkoutAttributes != null)
                 {
                     var existingAttributesQuery = _db.CheckoutAttributes.ApplyStoreFilter(_storeContext.CurrentStore.Id);
-                    if (!cart.IsShippingRequired())
+                    if (!cart.IsShippingRequired)
                     {
                         // No shipping required. Filter attributes which require shippable products.
                         existingAttributesQuery = existingAttributesQuery.Where(x => !x.ShippableProductRequired);
@@ -162,24 +173,25 @@ namespace Smartstore.Core.Checkout.Cart
 
                     var selectedAttributes = await _checkoutAttributeMaterializer.MaterializeCheckoutAttributesAsync(checkoutAttributes);
                     var notSelectedAttributes = await existingAttributesQuery
-                        .Where(x => x.IsRequired && !selectedAttributes.Contains(x))
+                        .Where(x => x.IsRequired && x.IsActive && !selectedAttributes.Contains(x))
                         .ToListAsync();
 
-                    // Check for not selected attributes.
+                    // Check for required attributes.
                     foreach (var attribute in notSelectedAttributes)
                     {
-                        if (attribute.IsActive)
-                        {
-                            var textPrompt = attribute.TextPrompt.IsEmpty() ? attribute.GetLocalized(x => x.Name) : attribute.GetLocalized(x => x.TextPrompt);
-                            currentWarnings.Add(T("ShoppingCart.SelectAttribute", textPrompt));
-                        }
+                        currentWarnings.Add(GetAttributeRequiredWarning(
+                            attribute.AttributeControlType,
+                            attribute.GetLocalized(x => x.TextPrompt).Value.NullEmpty() ?? attribute.GetLocalized(x => x.Name)));
                     }
                 }
             }
 
+            var validatingCartEvent = new ValidatingCartEvent(cart, warnings);
+            await _eventPublisher.PublishAsync(validatingCartEvent);
+
             warnings.AddRange(currentWarnings);
 
-            return !currentWarnings.Any();
+            return warnings.Count == 0;
         }
 
         public virtual async Task<bool> ValidateAddToCartItemAsync(AddToCartContext ctx, ShoppingCartItem cartItem, IEnumerable<OrganizedShoppingCartItem> cartItems)
@@ -206,7 +218,8 @@ namespace Smartstore.Core.Checkout.Cart
             }
 
             ctx.Warnings.AddRange(warnings);
-            return !warnings.Any();
+
+            return warnings.Count == 0;
         }
 
         public virtual bool ValidateItemsMaximumCartQuantity(ShoppingCartType cartType, int cartItemsCount, IList<string> warnings)
@@ -272,7 +285,7 @@ namespace Smartstore.Core.Checkout.Cart
 
             warnings.AddRange(currentWarnings);
 
-            return !currentWarnings.Any();
+            return currentWarnings.Count == 0;
         }
 
         public virtual async Task<bool> ValidateProductAsync(
@@ -360,19 +373,22 @@ namespace Smartstore.Core.Checkout.Cart
                 hasQuantityWarnings = true;
             }
 
-            if (quantityToValidate < p.OrderMinimumQuantity)
-            {
-                currentWarnings.Add(T("ShoppingCart.MinimumQuantity", p.OrderMinimumQuantity));
-                hasQuantityWarnings = true;
-            }
-
-            if (quantityToValidate > p.OrderMaximumQuantity)
-            {
-                currentWarnings.Add(T("ShoppingCart.MaximumQuantity", p.OrderMaximumQuantity));
-                hasQuantityWarnings = true;
-            }
-
             var allowedQuantities = p.ParseAllowedQuantities();
+
+            var minQty = Math.Max(1, allowedQuantities.Length > 0 ? allowedQuantities[0] : p.OrderMinimumQuantity);
+            if (quantityToValidate < minQty)
+            {
+                currentWarnings.Add(T("ShoppingCart.MinimumQuantity", minQty));
+                hasQuantityWarnings = true;
+            }
+
+            var maxQty = Math.Max(minQty, allowedQuantities.Length > 0 ? allowedQuantities.Last() : p.OrderMaximumQuantity);
+            if (quantityToValidate > maxQty)
+            {
+                currentWarnings.Add(T("ShoppingCart.MaximumQuantity", maxQty));
+                hasQuantityWarnings = true;
+            }
+
             if (allowedQuantities.Length > 0 && !allowedQuantities.Contains(quantityToValidate))
             {
                 currentWarnings.Add(T("ShoppingCart.AllowedQuantities", string.Join(", ", allowedQuantities)));
@@ -388,9 +404,11 @@ namespace Smartstore.Core.Checkout.Cart
                     if (cartItems != null
                         && (_cartSettings.AddProductsToBasketInSinglePositions || (p.ProductType == ProductType.BundledProduct && p.BundlePerItemPricing)))
                     {
+                        // Since products are added in single positions, we need to sum up the quantities of all items with the same product id
+                        // except the current item of which we already have the qantity.
                         quantityToValidate += cartItems
                             .Select(x => x.Item)
-                            .Where(x => x.ProductId == p.Id && x.ParentItemId == null)
+                            .Where(x => x.ProductId == p.Id && x.ParentItemId == null && x.Id != cartItem.Id)
                             .Sum(x => x.Quantity);
                     }
 
@@ -408,9 +426,11 @@ namespace Smartstore.Core.Checkout.Cart
                     {
                         if (cartItems != null && _cartSettings.AddProductsToBasketInSinglePositions)
                         {
+                            // Since products are added in single positions, we need to sum up the quantities of all items with the same product id.
+                            // except the current item of which we already have the qantity.
                             quantityToValidate += cartItems
                                 .Select(x => x.Item)
-                                .Where(x => x.ProductId == p.Id && x.ParentItemId == null && x.AttributeSelection.Equals(cartItem.AttributeSelection))
+                                .Where(x => x.ProductId == p.Id && x.ParentItemId == null && x.Id != cartItem.Id && x.AttributeSelection.Equals(cartItem.AttributeSelection))
                                 .Sum(x => x.Quantity);
                         }
 
@@ -446,7 +466,8 @@ namespace Smartstore.Core.Checkout.Cart
             }
 
             warnings.AddRange(currentWarnings);
-            return !currentWarnings.Any();
+
+            return currentWarnings.Count == 0;
         }
 
         public virtual async Task<bool> ValidateProductAttributesAsync(
@@ -470,8 +491,6 @@ namespace Smartstore.Core.Checkout.Cart
                 return true;
             }
 
-            var currentWarnings = new List<string>();
-
             // Get selected product variant attributes and check for product errors.
             var selectedAttributes = await _productAttributeMaterializer.MaterializeProductVariantAttributesAsync(selection);
             foreach (var attribute in selectedAttributes)
@@ -483,23 +502,39 @@ namespace Smartstore.Core.Checkout.Cart
                 }
             }
 
-            await _db.LoadCollectionAsync(product, x => x.ProductVariantAttributes, false, q => q.Include(x => x.ProductAttribute));
-
-            // Get existing product variant attributes.
-            foreach (var existingAttribute in product.ProductVariantAttributes)
+            // Checks whether there is an active selected attribute combination.
+            var combination = await _productAttributeMaterializer.FindAttributeCombinationAsync(product.Id, selection);
+            if ((combination != null && !combination.IsActive) ||
+                (product.AttributeCombinationRequired && combination == null))
             {
-                if (!existingAttribute.IsRequired)
+                warnings.Add(T("ShoppingCart.NotAvailable"));
+                return false;
+            }
+
+            // Check product variant attributes.
+            await _db.LoadCollectionAsync(product, x => x.ProductVariantAttributes, false, q => q
+                .Include(x => x.ProductAttribute)
+                .Include(x => x.ProductVariantAttributeValues)
+                .Include(x => x.RuleSet));
+
+            var currentWarnings = new List<string>();
+            var selectedValues = await _productAttributeMaterializer.MaterializeProductVariantAttributeValuesAsync(selection);
+            var ruleProvider = _ruleProviderFactory.GetProvider<IAttributeRuleProvider>(RuleScope.ProductAttribute, new AttributeRuleProviderContext(product.Id));
+
+            foreach (var attribute in product.ProductVariantAttributes)
+            {
+                if (!attribute.IsRequired || !await ruleProvider.IsAttributeActiveAsync(new(product, attribute, selectedValues)))
                 {
                     continue;
                 }
 
                 var found = false;
 
-                foreach (var attribute in selectedAttributes)
+                foreach (var pva in selectedAttributes)
                 {
-                    if (attribute.Id == existingAttribute.Id)
+                    if (pva.Id == attribute.Id)
                     {
-                        var values = selection.GetAttributeValues(attribute.Id) ?? Enumerable.Empty<object>();
+                        var values = selection.GetAttributeValues(pva.Id) ?? Enumerable.Empty<object>();
                         foreach (var value in values)
                         {
                             var strValue = value?.ToString().EmptyNull();
@@ -518,8 +553,9 @@ namespace Smartstore.Core.Checkout.Cart
                 }
 
                 if (!found &&
-                    (bundleItem?.FilterAttributes ?? false) &&
-                    !bundleItem.AttributeFilters.Any(x => x.AttributeId == existingAttribute.ProductAttributeId))
+                    bundleItem != null &&
+                    bundleItem.FilterAttributes &&
+                    !bundleItem.AttributeFilters.Any(x => x.AttributeId == attribute.Id))
                 {
                     // Attribute is filtered out by bundle item. It cannot be selected by the customer.
                     found = true;
@@ -527,27 +563,19 @@ namespace Smartstore.Core.Checkout.Cart
 
                 if (!found)
                 {
-                    var prompt = existingAttribute.TextPrompt.NullEmpty() ?? existingAttribute.ProductAttribute.GetLocalized(x => x.Name);
-                    currentWarnings.Add(T("ShoppingCart.SelectAttribute", prompt));
+                    currentWarnings.Add(GetAttributeRequiredWarning(
+                        attribute.AttributeControlType,
+                        attribute.TextPrompt.NullEmpty() ?? attribute.ProductAttribute.GetLocalized(x => x.Name)));
                 }
             }
 
-            if (currentWarnings.Any())
+            if (currentWarnings.Count > 0)
             {
                 warnings.AddRange(currentWarnings);
                 return false;
             }
 
-            // Checks whether there is an active selected attribute combination.
-            var combination = await _productAttributeMaterializer.FindAttributeCombinationAsync(product.Id, selection);
-            if (combination != null && !combination.IsActive)
-            {
-                currentWarnings.Add(T("ShoppingCart.NotAvailable"));
-            }
-
-            var attributeValues = await _productAttributeMaterializer.MaterializeProductVariantAttributeValuesAsync(selection);
-
-            var productLinkageValues = attributeValues
+            var productLinkageValues = selectedValues
                 .Where(x => x.ValueType == ProductVariantAttributeValueType.ProductLinkage)
                 .ToArray();
 
@@ -557,9 +585,9 @@ namespace Smartstore.Core.Checkout.Cart
                 .Distinct()
                 .ToArray();
 
-            var linkedProducts = linkedProductIds.Any()
+            var linkedProducts = linkedProductIds.Length > 0
                 ? await _db.Products.AsNoTracking().Where(x => linkedProductIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id)
-                : new Dictionary<int, Product>();
+                : [];
 
             // Validate each linked product, create shopping cart item from linked product and run validation.
             foreach (var value in productLinkageValues)
@@ -603,7 +631,8 @@ namespace Smartstore.Core.Checkout.Cart
             }
 
             warnings.AddRange(currentWarnings);
-            return !currentWarnings.Any();
+
+            return currentWarnings.Count == 0;
         }
 
         public virtual async Task<bool> ValidateRequiredProductsAsync(Product product, IEnumerable<OrganizedShoppingCartItem> cartItems, IList<string> warnings)
@@ -614,7 +643,7 @@ namespace Smartstore.Core.Checkout.Cart
                 return true;
 
             var requiredProductIds = product.ParseRequiredProductIds();
-            if (!requiredProductIds.Any())
+            if (requiredProductIds.Length == 0)
                 return true;
 
             var cartProductIds = cartItems.Select(x => x.Item.Product.Id);
@@ -633,6 +662,27 @@ namespace Smartstore.Core.Checkout.Cart
             }
 
             return isValid;
+        }
+
+        private string GetAttributeRequiredWarning(AttributeControlType type, string textPrompt)
+        {
+            switch (type)
+            {
+                case AttributeControlType.TextBox:
+                case AttributeControlType.MultilineTextbox:
+                case AttributeControlType.Datepicker:
+                    return T("ShoppingCart.EnterAttributeValue", textPrompt);
+
+                case AttributeControlType.FileUpload:
+                    return T("ShoppingCart.UploadAttributeFile", textPrompt);
+
+                case AttributeControlType.DropdownList:
+                case AttributeControlType.RadioList:
+                case AttributeControlType.Checkboxes:
+                case AttributeControlType.Boxes:
+                default:
+                    return T("ShoppingCart.SelectAttribute", textPrompt);
+            }
         }
     }
 }

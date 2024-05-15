@@ -1,7 +1,7 @@
-﻿using Smartstore.Core;
-using Smartstore.Core.Catalog.Pricing;
+﻿using Smartstore.Core.Catalog.Pricing;
 using Smartstore.Core.Catalog.Products;
 using Smartstore.Core.Checkout.Shipping;
+using Smartstore.Core.Common.Services;
 using Smartstore.Core.Data;
 using Smartstore.Core.Localization;
 using Smartstore.Http;
@@ -16,7 +16,7 @@ namespace Smartstore.Shipping
     internal class ByTotalProvider : IShippingRateComputationMethod, IConfigurable
     {
         private readonly SmartDbContext _db;
-        private readonly IWorkContext _workContext;
+        private readonly IRoundingHelper _roundingHelper;
         private readonly IShippingService _shippingService;
         private readonly IPriceCalculationService _priceCalculationService;
         private readonly IProductService _productService;
@@ -24,23 +24,21 @@ namespace Smartstore.Shipping
 
         public ByTotalProvider(
             SmartDbContext db,
-            IWorkContext workContext,
+            IRoundingHelper roundingHelper,
             IShippingService shippingService,
             IPriceCalculationService priceCalculationService,
             IProductService productService,
             ShippingByTotalSettings shippingByTotalSettings)
         {
             _db = db;
-            _workContext = workContext;
+            _roundingHelper = roundingHelper;
             _shippingService = shippingService;
             _priceCalculationService = priceCalculationService;
             _productService = productService;
             _shippingByTotalSettings = shippingByTotalSettings;
-
-            T = NullLocalizer.Instance;
         }
 
-        public Localizer T { get; set; }
+        public Localizer T { get; set; } = NullLocalizer.Instance;
 
         /// <summary>
         /// Gets the rate for the shipping method
@@ -88,7 +86,7 @@ namespace Smartstore.Shipping
 
             if (shippingByTotalRecord.UsePercentage)
             {
-                shippingTotal = _workContext.WorkingCurrency.RoundIfEnabledFor((decimal)(((float)subtotal) * ((float)shippingByTotalRecord.ShippingChargePercentage) / 100f));
+                shippingTotal = _roundingHelper.RoundIfEnabledFor((decimal)(((float)subtotal) * ((float)shippingByTotalRecord.ShippingChargePercentage) / 100f));
                 shippingTotal += baseCharge;
                 if (maxCharge.HasValue && shippingTotal > maxCharge)
                 {
@@ -147,11 +145,11 @@ namespace Smartstore.Shipping
 
         public async Task<ShippingOptionResponse> GetShippingOptionsAsync(ShippingOptionRequest request)
         {
-            Guard.NotNull(request, nameof(request));
+            Guard.NotNull(request);
 
             var response = new ShippingOptionResponse();
 
-            if (request.Items == null || request.Items.Count == 0)
+            if (request.Items.IsNullOrEmpty())
             {
                 response.Errors.Add(T("Admin.System.Warnings.NoShipmentItems"));
                 return response;
@@ -190,13 +188,13 @@ namespace Smartstore.Shipping
                 var calculationContext = await _priceCalculationService.CreateCalculationContextAsync(shoppingCartItem, calculationOptions);
                 var (unitPrice, itemSubtotal) = await _priceCalculationService.CalculateSubtotalAsync(calculationContext);
 
-                subTotal += itemSubtotal.FinalPrice.RoundedAmount;
+                subTotal += _roundingHelper.Round(itemSubtotal.FinalPrice);
             }
 
             var sqThreshold = _shippingByTotalSettings.SmallQuantityThreshold;
             var sqSurcharge = _shippingByTotalSettings.SmallQuantitySurcharge;
 
-            var shippingMethods = await _shippingService.GetAllShippingMethodsAsync(request.StoreId, true);
+            var shippingMethods = await _shippingService.GetAllShippingMethodsAsync(request.StoreId, request.MatchRules);
             foreach (var shippingMethod in shippingMethods)
             {
                 decimal? rate = await GetRateAsync(subTotal, shippingMethod.Id, request.StoreId, countryId, stateProvinceId, zip);

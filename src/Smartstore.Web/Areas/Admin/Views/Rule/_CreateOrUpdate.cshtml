@@ -59,17 +59,21 @@
         <div class="adminTitle">
             <smart-label asp-for="Scope" />
         </div>
-        <div sm-if="Model.Id == 0" class="adminData">
-            <select asp-for="Scope">
-				@foreach (var item in scopes)
-				{
-                    <option value="@item.Value" attr-selected='(item.Selected, "selected")' data-description="@(item.Get<string>("Description"))">@item.Text</option>
-				}
-            </select>
-        </div>
-        <div sm-if="Model.Id != 0" class="adminData">
-            <input type="hidden" asp-for="Scope" />
-            <input asp-for="Scope" readonly="readonly" />
+        <div class="adminData">
+            @if (Model.Id == 0)
+            {
+                <select asp-for="Scope">
+                    @foreach (var item in scopes)
+                    {
+                        <option value="@item.Value" attr-selected='(item.Selected, "selected")' data-description="@(item.Get<string>("Description"))">@item.Text</option>
+                    }
+                </select>
+            }
+            else
+            {
+                <input type="hidden" asp-for="Scope" />
+                <input asp-for="ScopeName" readonly="readonly" />
+            }
         </div>
     </div>
     <div sm-if="assignedToDiscounts?.Any() ?? false" class="adminRow">
@@ -130,12 +134,13 @@
 
     <div id="ruleset-root" class="ruleset-root" 
          data-dirty="false"
-         data-scope="@((int)Model.Scope)" 
+         data-scope="@((int)Model.Scope)"
          data-url-addgroup="@Url.Action("AddGroup")" 
          data-url-deletegroup="@Url.Action("DeleteGroup")"
-         data-url-updaterules="@Url.Action("UpdateRules", new { ruleScope = (int)Model.Scope })"
+         data-url-updaterules="@Url.Action("UpdateRules")"
          data-url-addrule="@Url.Action("AddRule")"
-         data-url-deleterule="@Url.Action("DeleteRule")">
+         data-url-deleterule="@Url.Action("DeleteRule")"
+         data-url-changeoperator="@Url.Action("ChangeOperator")">
          <partial name="_RuleSet" model="Model.ExpressionGroup" />
     </div>
 </div>

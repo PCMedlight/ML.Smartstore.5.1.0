@@ -253,7 +253,7 @@ namespace Smartstore.Core.DataExchange.Export
                     {
                         try
                         {
-                            await UpdateOrderStatus(ctx);
+                            await UpdateOrderStatus(ctx, cancelToken);
                         }
                         catch (Exception ex)
                         {
@@ -614,7 +614,7 @@ namespace Smartstore.Core.DataExchange.Export
             query = ApplyPaging(query, null, PageSize, ctx);
             var entities = await query.ToListAsync(ctx.CancelToken);
 
-            if (!entities.Any())
+            if (entities.Count == 0)
             {
                 return null;
             }
@@ -694,7 +694,7 @@ namespace Smartstore.Core.DataExchange.Export
             IQueryable<int> customerIdsByRolesQuery = null;
             IQueryable<BaseEntity> result = null;
 
-            if (f.CustomerRoleIds?.Any() ?? false)
+            if (!f.CustomerRoleIds.IsNullOrEmpty())
             {
                 customerIdsByRolesQuery = _db.CustomerRoleMappings
                     .AsNoTracking()
@@ -727,7 +727,7 @@ namespace Smartstore.Core.DataExchange.Export
                 if (f.ProductTagId.HasValue)
                     searchQuery = searchQuery.WithProductTagIds(f.ProductTagId.Value);
 
-                if (ctx.Request.EntitiesToExport.Any())
+                if (ctx.Request.EntitiesToExport.Count > 0)
                     searchQuery = searchQuery.WithProductIds(ctx.Request.EntitiesToExport.ToArray());
                 else
                     searchQuery = searchQuery.WithProductId(f.IdMinimum, f.IdMaximum);
@@ -797,10 +797,10 @@ namespace Smartstore.Core.DataExchange.Export
                 if (f.IsTaxExempt.HasValue)
                     query = query.Where(x => x.IsTaxExempt == f.IsTaxExempt.Value);
 
-                if (f.BillingCountryIds?.Any() ?? false)
+                if (!f.BillingCountryIds.IsNullOrEmpty())
                     query = query.Where(x => x.BillingAddress != null && f.BillingCountryIds.Contains(x.BillingAddress.CountryId ?? 0));
 
-                if (f.ShippingCountryIds?.Any() ?? false)
+                if (!f.ShippingCountryIds.IsNullOrEmpty())
                     query = query.Where(x => x.ShippingAddress != null && f.ShippingCountryIds.Contains(x.ShippingAddress.CountryId ?? 0));
 
                 if (f.LastActivityFrom.HasValue)
@@ -941,7 +941,7 @@ namespace Smartstore.Core.DataExchange.Export
                 throw new NotSupportedException($"Unsupported entity type '{entityType}'.");
             }
 
-            if (ctx.Request.EntitiesToExport.Any())
+            if (ctx.Request.EntitiesToExport.Count > 0)
             {
                 result = result.Where(x => ctx.Request.EntitiesToExport.Contains(x.Id));
             }
@@ -1111,13 +1111,14 @@ namespace Smartstore.Core.DataExchange.Export
             var limit = Math.Max(ctx.Request.Profile.Limit, 0);
             var recordsPerSegment = ctx.IsPreview ? 0 : Math.Max(ctx.Request.Profile.BatchSize, 0);
             var totalRecords = offset + ctx.ShopMetadata[ctx.Store.Id].TotalRecords;
+            var includeHidden = !ctx.Filter.IsPublished.HasValue || ctx.Filter.IsPublished.Value == false;
 
             if (entityType == ExportEntityType.Product)
             {
                 async Task dataLoaded(ICollection<Product> entities)
                 {
                     // Load data behind navigation properties for current entities batch in one go.
-                    ctx.ProductBatchContext = _productService.CreateProductBatchContext(entities, ctx.Store);
+                    ctx.ProductBatchContext = _productService.CreateProductBatchContext(entities, ctx.Store, null, includeHidden);
                     ctx.PriceCalculationOptions = await CreatePriceCalculationOptions(ctx.ProductBatchContext, ctx);
                     ctx.AttributeCombinationPriceCalcOptions = await CreatePriceCalculationOptions(ctx.ProductBatchContext, ctx, true);
                     ctx.AssociatedProductBatchContext = null;
@@ -1127,7 +1128,7 @@ namespace Smartstore.Core.DataExchange.Export
                     {
                         await context.AssociatedProducts.LoadAllAsync();
                         var associatedProducts = context.AssociatedProducts.SelectMany(x => x.Value);
-                        ctx.AssociatedProductBatchContext = _productService.CreateProductBatchContext(associatedProducts, ctx.Store);
+                        ctx.AssociatedProductBatchContext = _productService.CreateProductBatchContext(associatedProducts, ctx.Store, null, includeHidden);
 
                         var allProductEntities = entities.Where(x => x.ProductType != ProductType.GroupedProduct).Concat(associatedProducts);
                         ctx.TranslationsPerPage[nameof(Product)] = await CreateTranslationCollection(nameof(Product), allProductEntities);
@@ -1179,7 +1180,7 @@ namespace Smartstore.Core.DataExchange.Export
                     var orderItems = ctx.OrderBatchContext.OrderItems.SelectMany(x => x.Value);
                     var products = orderItems.Select(x => x.Product);
 
-                    ctx.ProductBatchContext = _productService.CreateProductBatchContext(products, ctx.Store);
+                    ctx.ProductBatchContext = _productService.CreateProductBatchContext(products, ctx.Store, null, includeHidden);
                     ctx.PriceCalculationOptions = await CreatePriceCalculationOptions(ctx.ProductBatchContext, ctx);
 
                     ctx.TranslationsPerPage[nameof(Product)] = await CreateTranslationCollection(nameof(Product), products);
@@ -1258,7 +1259,7 @@ namespace Smartstore.Core.DataExchange.Export
                 {
                     var products = entities.Select(x => x.Product);
 
-                    ctx.ProductBatchContext = _productService.CreateProductBatchContext(products, ctx.Store);
+                    ctx.ProductBatchContext = _productService.CreateProductBatchContext(products, ctx.Store, null, includeHidden);
                     ctx.PriceCalculationOptions = await CreatePriceCalculationOptions(ctx.ProductBatchContext, ctx);
 
                     ctx.TranslationsPerPage[nameof(Product)] = await CreateTranslationCollection(nameof(Product), products);
@@ -1382,7 +1383,7 @@ namespace Smartstore.Core.DataExchange.Export
                 .OrderBy(x => x.Id)
                 .ToArray();
 
-            if (!deployments.Any())
+            if (deployments.Length == 0)
             {
                 return false;
             }
@@ -1486,7 +1487,7 @@ namespace Smartstore.Core.DataExchange.Export
                 body.AppendFormat("<p><a href='{0}' download>{1}</a></p>", downloadUrl, ctx.ZipFile.Name);
             }
 
-            if (ctx.IsFileBasedExport && ctx.Result.Files.Any())
+            if (ctx.IsFileBasedExport && ctx.Result.Files.Count > 0)
             {
                 body.Append("<p>");
                 foreach (var file in ctx.Result.Files)
@@ -1514,12 +1515,12 @@ namespace Smartstore.Core.DataExchange.Export
                 message.To.AddRange(addresses);
             }
 
-            if (!message.To.Any() && _contactDataSettings.CompanyEmailAddress.HasValue())
+            if (message.To.Count == 0 && _contactDataSettings.CompanyEmailAddress.HasValue())
             {
                 message.To.Add(new(_contactDataSettings.CompanyEmailAddress));
             }
 
-            if (!message.To.Any())
+            if (message.To.Count == 0)
             {
                 message.To.Add(new(emailAccount.Email, emailAccount.DisplayName));
             }
@@ -1540,7 +1541,7 @@ namespace Smartstore.Core.DataExchange.Export
             //await _db.SaveChangesAsync();
         }
 
-        private async Task UpdateOrderStatus(DataExporterContext ctx)
+        private async Task UpdateOrderStatus(DataExporterContext ctx, CancellationToken cancelToken)
         {
             var num = 0;
             int? newOrderStatusId = null;
@@ -1560,8 +1561,7 @@ namespace Smartstore.Core.DataExchange.Export
                 {
                     num += await _db.Orders
                         .Where(x => chunk.Contains(x.Id))
-                        .ExecuteUpdateAsync(
-                            x => x.SetProperty(p => p.OrderStatusId, p => newOrderStatusId.Value));
+                        .ExecuteUpdateAsync(setter => setter.SetProperty(o => o.OrderStatusId, o => newOrderStatusId.Value), cancelToken);
                 }
 
                 ctx.Log.Info($"Updated order status for {num} order(s).");

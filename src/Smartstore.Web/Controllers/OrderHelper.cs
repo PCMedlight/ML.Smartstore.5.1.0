@@ -23,6 +23,7 @@ using Smartstore.Engine.Modularity;
 using Smartstore.IO;
 using Smartstore.Pdf;
 using Smartstore.Utilities.Html;
+using Smartstore.Web.Models.Common;
 using Smartstore.Web.Models.Media;
 using Smartstore.Web.Models.Orders;
 
@@ -82,7 +83,7 @@ namespace Smartstore.Web.Controllers
 
         public Localizer T { get; set; } = NullLocalizer.Instance;
 
-        public static string OrderDetailsPrintViewPath => "~/Views/Order/Details.Print.cshtml";
+        public static string OrderDetailsPrintViewPath => "/{theme}/Views/Order/Details.Print.cshtml";
 
         private async Task<ImageModel> PrepareOrderItemImageModelAsync(
             Product product,
@@ -166,7 +167,7 @@ namespace Smartstore.Web.Controllers
                 ProductSeName = await orderItem.Product.GetActiveSlugAsync(),
                 ProductType = orderItem.Product.ProductType,
                 Quantity = orderItem.Quantity,
-                AttributeInfo = orderItem.AttributeDescription
+                AttributeInfo = HtmlUtility.FormatPlainText(HtmlUtility.ConvertHtmlToPlainText(orderItem.AttributeDescription))
             };
 
             var quantityUnit = await _db.QuantityUnits.FindByIdAsync(orderItem.Product.QuantityUnitId ?? 0, false);
@@ -201,7 +202,7 @@ namespace Smartstore.Web.Controllers
                         VisibleIndividually = bid.VisibleIndividually,
                         Quantity = bid.Quantity,
                         DisplayOrder = bid.DisplayOrder,
-                        AttributeInfo = bid.AttributesInfo
+                        AttributeInfo = HtmlUtility.FormatPlainText(HtmlUtility.ConvertHtmlToPlainText(bid.AttributesInfo))
                     };
 
                     bundleItemModel.ProductUrl = await _productUrlHelper.GetProductPathAsync(bid.ProductId, bundleItemModel.ProductSeName, bid.AttributeSelection);
@@ -257,6 +258,9 @@ namespace Smartstore.Web.Controllers
                     orderItem.AttributeSelection,
                     catalogSettings);
             }
+
+            // Custom mapping
+            await MapperFactory.MapWithRegisteredMapperAsync(orderItem, model, new { Order = order, Currency = customerCurrency });
 
             return model;
 
@@ -326,8 +330,12 @@ namespace Smartstore.Web.Controllers
             if (o.ShippingStatus != ShippingStatus.ShippingNotRequired)
             {
                 model.IsShippable = true;
-                await MapperFactory.MapAsync(o.ShippingAddress, model.ShippingAddress);
                 model.ShippingMethod = o.ShippingMethod;
+
+                if (o.ShippingAddress != null)
+                {
+                    model.ShippingAddress = await MapperFactory.MapAsync<Address, AddressModel>(o.ShippingAddress);
+                }
 
                 // Shipments (only already shipped).
                 await _db.LoadCollectionAsync(o, x => x.Shipments);
@@ -353,10 +361,13 @@ namespace Smartstore.Web.Controllers
                 }
             }
 
-            await MapperFactory.MapAsync(o.BillingAddress, model.BillingAddress);
+            if (o.BillingAddress != null)
+            {
+                model.BillingAddress = await MapperFactory.MapAsync<Address, AddressModel>(o.BillingAddress);
+            }
+
             model.VatNumber = o.VatNumber;
 
-            // Payment method.
             var paymentMethod = await _paymentService.LoadPaymentProviderBySystemNameAsync(o.PaymentMethodSystemName);
             model.PaymentMethod = paymentMethod != null ? _moduleManager.Value.GetLocalizedFriendlyName(paymentMethod.Metadata) : o.PaymentMethodSystemName;
             model.PaymentMethodSystemName = o.PaymentMethodSystemName;
@@ -466,14 +477,16 @@ namespace Smartstore.Web.Controllers
 
                     foreach (var tr in o.TaxRatesDictionary)
                     {
-                        var rate = _taxService.FormatTaxRate(tr.Key);
+                        var formattedRate = _taxService.FormatTaxRate(tr.Key);
                         var labelKey = _services.WorkContext.TaxDisplayType == TaxDisplayType.IncludingTax ? "ShoppingCart.Totals.TaxRateLineIncl" : "ShoppingCart.Totals.TaxRateLineExcl";
+                        var amount = ConvertToExchangeRate(tr.Value);
 
                         model.TaxRates.Add(new OrderDetailsModel.TaxRate
                         {
-                            Rate = rate,
-                            Label = T(labelKey, rate),
-                            Value = ConvertToExchangeRate(tr.Value).ToString()
+                            Rate = tr.Key,
+                            FormattedRate = formattedRate,
+                            Amount = amount,
+                            Label = T(labelKey, formattedRate)
                         });
                     }
                 }
@@ -494,16 +507,16 @@ namespace Smartstore.Web.Controllers
 
             foreach (var gcuh in o.GiftCardUsageHistory)
             {
-                var remainingAmountBase = await _giftCardService.GetRemainingAmountAsync(gcuh.GiftCard);
+                var remainingAmount = await _giftCardService.GetRemainingAmountAsync(gcuh.GiftCard);
+                var amount = ConvertToExchangeRate(gcuh.UsedValue);
 
-                var gcModel = new OrderDetailsModel.GiftCard
+                model.GiftCards.Add(new OrderDetailsModel.GiftCard
                 {
-                    CouponCode = gcuh.GiftCard.GiftCardCouponCode,
-                    Amount = (ConvertToExchangeRate(gcuh.UsedValue) * -1).ToString(),
-                    Remaining = ConvertToExchangeRate(remainingAmountBase.Amount).ToString()
-                };
-
-                model.GiftCards.Add(gcModel);
+                    Amount = amount,
+                    FormattedAmount = (amount * -1).ToString(),
+                    Remaining = ConvertToExchangeRate(remainingAmount.Amount),
+                    CouponCode = gcuh.GiftCard.GiftCardCouponCode
+                });
             }
 
             // Reward points.
@@ -549,7 +562,7 @@ namespace Smartstore.Web.Controllers
                 {
                     Note = orderNote.FormatOrderNoteText(),
                     CreatedOn = createdOn,
-                    FriendlyCreatedOn = createdOn.Humanize(false)
+                    FriendlyCreatedOn = createdOn.ToHumanizedString(false)
                 });
             }
 
@@ -566,6 +579,9 @@ namespace Smartstore.Web.Controllers
                 var orderItemModel = await PrepareOrderItemModelAsync(o, orderItem, catalogSettings, shoppingCartSettings, mediaSettings, customerCurrency);
                 model.Items.Add(orderItemModel);
             }
+
+            // Custom mapping
+            await MapperFactory.MapWithRegisteredMapperAsync(o, model, new { Context = context });
 
             return model;
 

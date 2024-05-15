@@ -16,93 +16,26 @@ namespace Smartstore.Admin.Controllers
     {
         private readonly SmartDbContext _db;
         private readonly IActivityLogger _activityLogger;
-        private readonly ILanguageService _languageService;
         private readonly ILocalizedEntityService _localizedEntityService;
         private readonly ICurrencyService _currencyService;
         private readonly IStoreMappingService _storeMappingService;
         private readonly MeasureSettings _measureSettings;
-        private readonly AdminAreaSettings _adminAreaSettings;
 
         public CheckoutAttributeController(
             SmartDbContext db,
             IActivityLogger activityLogger,
-            ILanguageService languageService,
             ILocalizedEntityService localizedEntityService,
             ICurrencyService currencyService,
             MeasureSettings measureSettings,
-            IStoreMappingService storeMappingService,
-            AdminAreaSettings adminAreaSettings)
+            IStoreMappingService storeMappingService)
         {
             _db = db;
             _activityLogger = activityLogger;
-            _languageService = languageService;
             _localizedEntityService = localizedEntityService;
             _currencyService = currencyService;
             _measureSettings = measureSettings;
             _storeMappingService = storeMappingService;
-            _adminAreaSettings = adminAreaSettings;
         }
-
-        #region Utilities
-
-        [NonAction]
-        public async Task UpdateAttributeLocalesAsync(CheckoutAttribute checkoutAttribute, CheckoutAttributeModel model)
-        {
-            foreach (var localized in model.Locales)
-            {
-                await _localizedEntityService.ApplyLocalizedValueAsync(checkoutAttribute, x => x.Name, localized.Name, localized.LanguageId);
-                await _localizedEntityService.ApplyLocalizedValueAsync(checkoutAttribute, x => x.TextPrompt, localized.TextPrompt, localized.LanguageId);
-            }
-        }
-
-        [NonAction]
-        public async Task UpdateValueLocalesAsync(CheckoutAttributeValue checkoutAttributeValue, CheckoutAttributeValueModel model)
-        {
-            foreach (var localized in model.Locales)
-            {
-                await _localizedEntityService.ApplyLocalizedValueAsync(checkoutAttributeValue, x => x.Name, localized.Name, localized.LanguageId);
-            }
-        }
-
-        [NonAction]
-        private async Task PrepareCheckoutAttributeModelAsync(CheckoutAttributeModel model, CheckoutAttribute checkoutAttribute, bool excludeProperties)
-        {
-            Guard.NotNull(model, nameof(model));
-
-            var taxCategories = await _db.TaxCategories
-                .AsNoTracking()
-                .OrderBy(x => x.DisplayOrder)
-                .ToListAsync();
-
-            ViewBag.AvailableTaxCategories = new List<SelectListItem>();
-            foreach (var tc in taxCategories)
-            {
-                ViewBag.AvailableTaxCategories.Add(new SelectListItem
-                {
-                    Text = tc.Name,
-                    Value = tc.Id.ToString(),
-                    Selected = checkoutAttribute != null && !excludeProperties && tc.Id == checkoutAttribute.TaxCategoryId
-                });
-            }
-
-            if (!excludeProperties)
-            {
-                model.SelectedStoreIds = await _storeMappingService.GetAuthorizedStoreIdsAsync(checkoutAttribute);
-            }
-        }
-
-        [NonAction]
-        private async Task PrepareModelAsync(CheckoutAttributeValueModel model, CheckoutAttribute attribute)
-        {
-            var baseWeight = await _db.MeasureWeights.FindByIdAsync(_measureSettings.BaseWeightId, false);
-
-            model.CheckoutAttributeId = attribute?.Id ?? 0;
-            model.IsListTypeAttribute = attribute?.IsListTypeAttribute ?? false;
-            model.PrimaryStoreCurrencyCode = _currencyService.PrimaryCurrency.CurrencyCode;
-            model.BaseWeight = baseWeight?.GetLocalized(x => x.Name) ?? string.Empty;
-        }
-
-        #endregion
 
         #region Checkout attributes
 
@@ -132,6 +65,16 @@ namespace Smartstore.Admin.Controllers
                 .ToPagedList(command)
                 .LoadAsync();
 
+            var attributeIds = checkoutAttributes.Select(x => x.Id).ToArray();
+            var numberOfOptions = await _db.CheckoutAttributes
+                .Where(x => attributeIds.Contains(x.Id))
+                .Select(x => new
+                {
+                    x.Id,
+                    NumberOfOptions = _db.CheckoutAttributeValues.Count(y => y.CheckoutAttributeId == x.Id)
+                })
+                .ToDictionaryAsync(x => x.Id, x => x);
+
             var mapper = MapperFactory.GetMapper<CheckoutAttribute, CheckoutAttributeModel>();
             var checkoutAttributesModels = await checkoutAttributes
                 .SelectAwait(async x =>
@@ -139,6 +82,11 @@ namespace Smartstore.Admin.Controllers
                     var model = await mapper.MapAsync(x);
                     model.AttributeControlTypeName = x.AttributeControlType.GetLocalizedEnum(Services.WorkContext.WorkingLanguage.Id);
                     model.EditUrl = Url.Action(nameof(Edit), "CheckoutAttribute", new { id = x.Id });
+
+                    if (numberOfOptions.TryGetValue(x.Id, out var info))
+                    {
+                        model.NumberOfOptions = info.NumberOfOptions;
+                    }
 
                     return model;
                 })
@@ -179,7 +127,8 @@ namespace Smartstore.Admin.Controllers
             };
 
             AddLocales(model.Locales);
-            await PrepareCheckoutAttributeModelAsync(model, null, true);
+            await PrepareCheckoutAttributeModel(model, null, true);
+
             return View(model);
         }
 
@@ -193,16 +142,18 @@ namespace Smartstore.Admin.Controllers
                 _db.CheckoutAttributes.Add(checkoutAttribute);
                 await _db.SaveChangesAsync();
 
-                await UpdateAttributeLocalesAsync(checkoutAttribute, model);
+                await UpdateAttributeLocales(checkoutAttribute, model);
                 await SaveStoreMappingsAsync(checkoutAttribute, model.SelectedStoreIds);
 
                 _activityLogger.LogActivity(KnownActivityLogTypes.AddNewCheckoutAttribute, T("ActivityLog.AddNewCheckoutAttribute"), checkoutAttribute.Name);
-
                 NotifySuccess(T("Admin.Catalog.Attributes.CheckoutAttributes.Added"));
-                return continueEditing ? RedirectToAction(nameof(Edit), new { id = checkoutAttribute.Id }) : RedirectToAction(nameof(List));
+
+                return continueEditing 
+                    ? RedirectToAction(nameof(Edit), new { id = checkoutAttribute.Id }) 
+                    : RedirectToAction(nameof(List));
             }
 
-            await PrepareCheckoutAttributeModelAsync(model, null, true);
+            await PrepareCheckoutAttributeModel(model, null, true);
 
             return View(model);
         }
@@ -224,7 +175,7 @@ namespace Smartstore.Admin.Controllers
                 locale.TextPrompt = checkoutAttribute.GetLocalized(x => x.TextPrompt, languageId, false, false);
             });
 
-            await PrepareCheckoutAttributeModelAsync(model, checkoutAttribute, false);
+            await PrepareCheckoutAttributeModel(model, checkoutAttribute, false);
 
             return View(model);
         }
@@ -242,17 +193,19 @@ namespace Smartstore.Admin.Controllers
             if (ModelState.IsValid)
             {
                 await MapperFactory.MapAsync(model, checkoutAttribute);
-                await UpdateAttributeLocalesAsync(checkoutAttribute, model);
+                await UpdateAttributeLocales(checkoutAttribute, model);
                 await SaveStoreMappingsAsync(checkoutAttribute, model.SelectedStoreIds);
                 await _db.SaveChangesAsync();
 
                 _activityLogger.LogActivity(KnownActivityLogTypes.EditCheckoutAttribute, T("ActivityLog.EditCheckoutAttribute"), checkoutAttribute.Name);
-
                 NotifySuccess(T("Admin.Catalog.Attributes.CheckoutAttributes.Updated"));
-                return continueEditing ? RedirectToAction(nameof(Edit), checkoutAttribute.Id) : RedirectToAction(nameof(List));
+
+                return continueEditing 
+                    ? RedirectToAction(nameof(Edit), checkoutAttribute.Id) 
+                    : RedirectToAction(nameof(List));
             }
 
-            await PrepareCheckoutAttributeModelAsync(model, checkoutAttribute, true);
+            await PrepareCheckoutAttributeModel(model, checkoutAttribute, true);
 
             return View(model);
         }
@@ -271,8 +224,8 @@ namespace Smartstore.Admin.Controllers
             await _db.SaveChangesAsync();
 
             _activityLogger.LogActivity(KnownActivityLogTypes.DeleteCheckoutAttribute, T("ActivityLog.DeleteCheckoutAttribute"), checkoutAttribute.Name);
-
             NotifySuccess(T("Admin.Catalog.Attributes.CheckoutAttributes.Deleted"));
+
             return RedirectToAction(nameof(List));
         }
 
@@ -359,7 +312,7 @@ namespace Smartstore.Admin.Controllers
             }
 
             var model = new CheckoutAttributeValueModel();
-            await PrepareModelAsync(model, checkoutAttribute);
+            await PrepareCheckoutAttributeValueModel(model, checkoutAttribute);
 
             AddLocales(model.Locales);
 
@@ -379,7 +332,7 @@ namespace Smartstore.Admin.Controllers
                 return NotFound();
             }
 
-            await PrepareModelAsync(model, checkoutAttribute);
+            await PrepareCheckoutAttributeValueModel(model, checkoutAttribute);
 
             if (ModelState.IsValid)
             {
@@ -387,7 +340,7 @@ namespace Smartstore.Admin.Controllers
                 _db.CheckoutAttributeValues.Add(checkoutAttributeValue);
                 await _db.SaveChangesAsync();
 
-                await UpdateValueLocalesAsync(checkoutAttributeValue, model);
+                await UpdateValueLocales(checkoutAttributeValue, model);
 
                 ViewBag.RefreshPage = true;
                 ViewBag.BtnId = btnId;
@@ -407,7 +360,7 @@ namespace Smartstore.Admin.Controllers
             }
 
             var model = await MapperFactory.MapAsync<CheckoutAttributeValue, CheckoutAttributeValueModel>(checkoutAttributeValue);
-            await PrepareModelAsync(model, checkoutAttributeValue.CheckoutAttribute);
+            await PrepareCheckoutAttributeValueModel(model, checkoutAttributeValue.CheckoutAttribute);
 
             AddLocales(model.Locales, (locale, languageId) =>
             {
@@ -431,12 +384,12 @@ namespace Smartstore.Admin.Controllers
                 return NotFound();
             }
 
-            await PrepareModelAsync(model, checkoutAttributeValue.CheckoutAttribute);
+            await PrepareCheckoutAttributeValueModel(model, checkoutAttributeValue.CheckoutAttribute);
 
             if (ModelState.IsValid)
             {
                 await MapperFactory.MapAsync(model, checkoutAttributeValue);
-                await UpdateValueLocalesAsync(checkoutAttributeValue, model);
+                await UpdateValueLocales(checkoutAttributeValue, model);
                 await _db.SaveChangesAsync();
 
                 ViewBag.RefreshPage = true;
@@ -466,6 +419,60 @@ namespace Smartstore.Admin.Controllers
             }
 
             return Json(new { Success = success, Count = numDeleted });
+        }
+
+        #endregion
+
+        #region Utilities
+
+        private async Task UpdateAttributeLocales(CheckoutAttribute checkoutAttribute, CheckoutAttributeModel model)
+        {
+            foreach (var localized in model.Locales)
+            {
+                await _localizedEntityService.ApplyLocalizedValueAsync(checkoutAttribute, x => x.Name, localized.Name, localized.LanguageId);
+                await _localizedEntityService.ApplyLocalizedValueAsync(checkoutAttribute, x => x.TextPrompt, localized.TextPrompt, localized.LanguageId);
+            }
+        }
+
+        private async Task UpdateValueLocales(CheckoutAttributeValue checkoutAttributeValue, CheckoutAttributeValueModel model)
+        {
+            foreach (var localized in model.Locales)
+            {
+                await _localizedEntityService.ApplyLocalizedValueAsync(checkoutAttributeValue, x => x.Name, localized.Name, localized.LanguageId);
+            }
+        }
+
+        private async Task PrepareCheckoutAttributeModel(CheckoutAttributeModel model, CheckoutAttribute checkoutAttribute, bool excludeProperties)
+        {
+            Guard.NotNull(model);
+
+            var taxCategories = await _db.TaxCategories
+                .AsNoTracking()
+                .OrderBy(x => x.DisplayOrder)
+                .ToListAsync();
+
+            ViewBag.AvailableTaxCategories = taxCategories
+                .Select(x => new SelectListItem
+                {
+                    Text = x.Name,
+                    Value = x.Id.ToString(),
+                    Selected = checkoutAttribute != null && !excludeProperties && x.Id == checkoutAttribute.TaxCategoryId
+                })
+                .ToList();
+
+            if (!excludeProperties)
+            {
+                model.SelectedStoreIds = await _storeMappingService.GetAuthorizedStoreIdsAsync(checkoutAttribute);
+            }
+        }
+
+        private async Task PrepareCheckoutAttributeValueModel(CheckoutAttributeValueModel model, CheckoutAttribute attribute)
+        {
+            var baseWeight = await _db.MeasureWeights.FindByIdAsync(_measureSettings.BaseWeightId, false);
+
+            model.CheckoutAttributeId = attribute?.Id ?? 0;
+            model.PrimaryStoreCurrencyCode = _currencyService.PrimaryCurrency.CurrencyCode;
+            model.BaseWeight = baseWeight?.GetLocalized(x => x.Name) ?? string.Empty;
         }
 
         #endregion

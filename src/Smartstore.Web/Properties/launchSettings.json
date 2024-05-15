@@ -19,14 +19,14 @@
     }
   },
   "iisSettings": {
-    "windowsAuthentication": true,
+    "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iis": {
       "applicationUrl": "http://localhost:81/smartstore",
       "sslPort": 0
     },
     "iisExpress": {
-      "applicationUrl": "http://172.16.101.97:80/",
+      "applicationUrl": "http://localhost:59318/",
       "sslPort": 44325
     }
   }

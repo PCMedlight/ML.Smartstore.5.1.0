@@ -149,8 +149,8 @@ namespace Smartstore.Web.Controllers
                         Services.ActivityLogger.LogActivity(KnownActivityLogTypes.PublicStoreLogin, T("ActivityLog.PublicStore.Login"), customer);
 
                         if (returnUrl.IsEmpty()
-                            || returnUrl.Contains("/login?", StringComparison.OrdinalIgnoreCase)
-                            || returnUrl.Contains("/passwordrecoveryconfirm", StringComparison.OrdinalIgnoreCase)
+                            || returnUrl == "/"
+                            || returnUrl.Contains("/passwordrecovery", StringComparison.OrdinalIgnoreCase)
                             || returnUrl.Contains("/activation", StringComparison.OrdinalIgnoreCase)
                             || !Url.IsLocalUrl(returnUrl))
                         {
@@ -500,14 +500,25 @@ namespace Smartstore.Web.Controllers
         [LocalizedRoute("/passwordrecovery", Name = "PasswordRecovery")]
         public IActionResult PasswordRecovery()
         {
-            return View(new PasswordRecoveryModel());
+            var model = new PasswordRecoveryModel
+            {
+                DisplayCaptcha = _captchaSettings.CanDisplayCaptcha && _captchaSettings.ShowOnPasswordRecoveryPage
+            };
+
+            return View(model);
         }
 
         [HttpPost, DisallowRobot]
+        [ValidateCaptcha(CaptchaSettingName = nameof(CaptchaSettings.ShowOnPasswordRecoveryPage))]
         [LocalizedRoute("/passwordrecovery", Name = "PasswordRecovery")]
         [FormValueRequired("send-email")]
-        public async Task<IActionResult> PasswordRecovery(PasswordRecoveryModel model)
+        public async Task<IActionResult> PasswordRecovery(PasswordRecoveryModel model, string captchaError)
         {
+            if (_captchaSettings.ShowOnPasswordRecoveryPage && captchaError.HasValue())
+            {
+                ModelState.AddModelError(string.Empty, captchaError);
+            }
+
             if (ModelState.IsValid)
             {
                 var customer = await _userManager.FindByEmailAsync(model.Email);
@@ -533,6 +544,8 @@ namespace Smartstore.Web.Controllers
             }
 
             // If we got this far something failed. Redisplay form.
+            model.DisplayCaptcha = _captchaSettings.CanDisplayCaptcha && _captchaSettings.ShowOnPasswordRecoveryPage;
+
             return View(model);
         }
 
@@ -773,7 +786,7 @@ namespace Smartstore.Web.Controllers
                     var redirectUrl = Url.RouteUrl("RegisterResult", new { resultId = (int)UserRegistrationType.Standard });
                     if (returnUrl.HasValue())
                     {
-                        redirectUrl = _webHelper.ModifyQueryString(redirectUrl, "returnUrl=" + returnUrl.UrlEncode(), null);
+                        redirectUrl = _webHelper.ModifyQueryString(redirectUrl, "returnUrl=" + returnUrl.UrlEncode());
                     }
 
                     return Redirect(redirectUrl);
@@ -817,15 +830,9 @@ namespace Smartstore.Web.Controllers
                 customer.Company = model.Company;
             }
 
-            if (_customerSettings.DateOfBirthEnabled && model.DateOfBirthYear.HasValue)
+            if (_customerSettings.DateOfBirthEnabled && model.DateOfBirth.HasValue)
             {
-                try
-                {
-                    customer.BirthDate = new DateTime(model.DateOfBirthYear.Value, model.DateOfBirthMonth.Value, model.DateOfBirthDay.Value);
-                }
-                catch
-                {
-                }
+                customer.BirthDate = model.DateOfBirth;
             }
 
             if (_customerSettings.CustomerNumberMethod == CustomerNumberMethod.AutomaticallySet && customer.CustomerNumber.IsEmpty())

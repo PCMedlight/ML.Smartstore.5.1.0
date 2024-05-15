@@ -22,11 +22,7 @@ namespace Smartstore.Core.Content.Menus
             _storeContext = storeContext;
             _categoryService = categoryService;
             _linkResolver = linkResolver;
-
-            T = NullLocalizer.Instance;
         }
-
-        public Localizer T { get; set; }
 
         public override async Task<TreeNode<MenuItem>> AppendAsync(MenuItemProviderRequest request)
         {
@@ -86,6 +82,7 @@ namespace Smartstore.Core.Content.Menus
                 EntityId = node.Id,
                 EntityName = nameof(Category),
                 MenuItemId = request.Entity.Id,
+                MenuId = request.Entity.MenuId,
                 Text = name?.Value ?? node.Name,
                 Rtl = name?.CurrentLanguage?.Rtl ?? false,
                 BadgeText = node.Id > 0 ? node.GetLocalized(x => x.BadgeText) : null,

@@ -37,7 +37,8 @@ namespace Smartstore.Core.Data.Migrations
         {
         }
 
-        public bool RollbackOnFailure => false;
+        public DataSeederStage Stage => DataSeederStage.Early;
+        public bool AbortOnFailure => false;
 
         public async Task SeedAsync(SmartDbContext context, CancellationToken cancelToken = default)
         {
@@ -812,8 +813,6 @@ namespace Smartstore.Core.Data.Migrations
             #endregion
 
             #region Obsolete
-
-            // TODO: (core) Delete all Telerik language resources
 
             builder.Delete(
                 "Admin.Catalog.Categories.BackToList",

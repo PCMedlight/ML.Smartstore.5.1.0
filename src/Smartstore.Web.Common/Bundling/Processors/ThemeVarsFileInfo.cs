@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.FileProviders;
+﻿using System.IO.Hashing;
+using Microsoft.Extensions.FileProviders;
 using Smartstore.IO;
 using Smartstore.Utilities;
 using Smartstore.Web.Theming;
@@ -47,8 +48,8 @@ namespace Smartstore.Web.Bundling.Processors
         public ThemeVarsFileInfo(string content, ThemeVariableRepository repo)
             : this(FileName)
         {
-            Guard.NotNull(content, nameof(content));
-            Guard.NotNull(repo, nameof(repo));
+            Guard.NotNull(content);
+            Guard.NotNull(repo);
 
             _content = content;
             _repo = repo;
@@ -76,7 +77,7 @@ namespace Smartstore.Web.Bundling.Processors
             if (_contentHash == null)
             {
                 var css = await GetContentAsync();
-                _contentHash = (int)XxHashUnsafe.ComputeHash(css);
+                _contentHash = (int)XxHash32.HashToUInt32(css.GetBytes());
             }
 
             return _contentHash.Value;

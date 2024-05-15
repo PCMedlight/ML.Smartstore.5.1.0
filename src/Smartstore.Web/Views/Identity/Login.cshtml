@@ -11,7 +11,7 @@
     var returnUrl = Context.Request.Query["returnUrl"].ToString();
     if (returnUrl.HasValue())
     {
-        registerUrl = Display.ModifyQueryString(registerUrl, "returnUrl=" + returnUrl.UrlEncode(), null);
+        registerUrl = Display.ModifyQueryString(registerUrl, "returnUrl=" + returnUrl.UrlEncode());
     }
 
     var currentUser = WorkContext.CurrentCustomer;
@@ -85,14 +85,14 @@
                     <div class="form-group d-flex justify-content-between">
                         <input asp-for="RememberMe" sm-switch="false" />
                         <div class="forgot-password">
-                            <a asp-route="PasswordRecovery">@T("Account.Login.ForgotPassword")</a>
+                            <a asp-route="PasswordRecovery" rel="nofollow">@T("Account.Login.ForgotPassword")</a>
                         </div>
                     </div>
 
                     <captcha sm-enabled="Model.DisplayCaptcha" class="form-group" />
 
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary btn-lg btn-block btn-login">
+                        <button type="submit" class="btn btn-primary btn-lg btn-block btn-login btn-prevent-multiclick">
                             @T("Account.Login.LoginButton")
                         </button>
                     </div>

@@ -33,6 +33,8 @@ namespace Smartstore.Admin.Models.Orders
         [LocalizedDisplay("Admin.Catalog.Attributes.AttributeControlType")]
         public string AttributeControlTypeName { get; set; }
 
+        public bool IsListTypeAttribute { get; set; }
+
         [LocalizedDisplay("Common.DisplayOrder")]
         public int DisplayOrder { get; set; }
 
@@ -45,6 +47,10 @@ namespace Smartstore.Admin.Models.Orders
 
         [LocalizedDisplay("Admin.Common.Store.LimitedTo")]
         public bool LimitedToStores { get; set; }
+
+        [LocalizedDisplay("Admin.Catalog.Attributes.CheckoutAttributes.Values")]
+        public int NumberOfOptions { get; set; }
+
         public string EditUrl { get; set; }
     }
 

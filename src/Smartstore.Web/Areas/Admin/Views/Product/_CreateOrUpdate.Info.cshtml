@@ -1,6 +1,8 @@
 ﻿@using Smartstore.Core.Catalog.Products
 @using Smartstore.Core.Checkout.GiftCards
 
+@inject ILanguageService languageService
+
 @model ProductModel
 
 <script sm-target-zone="Scripts" data-origin="product-info">
@@ -43,6 +45,7 @@
     function toggleProductType() {
         var selectedProductTypeId = $("#@Html.IdFor(model => model.ProductTypeId)").val();
         if (selectedProductTypeId == '@((int)ProductType.SimpleProduct)') {
+            $('#grouped-product-config').hide();
             $('#group-required-other-products').show();
             $('#group-giftcard').show();
             $('#group-downloads').show();
@@ -53,6 +56,7 @@
             $('a[href="#tab-inventory"]').parent().removeClass("hide"); // specified in _CreateOrUpdate.cshtml
         }
         else if (selectedProductTypeId == '@((int)ProductType.GroupedProduct)') {
+            $('#grouped-product-config').show();
             $('#group-required-other-products').hide();
             $('#group-giftcard').hide();
             $('#group-downloads').hide();
@@ -63,6 +67,7 @@
             $('a[href="#tab-inventory"]').parent().addClass("hide"); // specified in _CreateOrUpdate.cshtml
         }
         else if (selectedProductTypeId == '@((int)ProductType.BundledProduct)') {
+            $('#grouped-product-config').hide();
         	//$('a[href="#tab-inventory"]').parent().addClass("hide"); // specified in _CreateOrUpdate.cshtml
         }
 	}
@@ -114,15 +119,6 @@
 
     <div class="adminRow">
         <div class="adminTitle">
-            <smart-label asp-for="ProductTypeId" />
-        </div>
-        <div class="adminData">
-            <select asp-for="ProductTypeId" asp-items="Html.GetLocalizedEnumSelectList(typeof(ProductType))"></select>
-            <span asp-validation-for="ProductTypeId"></span>
-        </div>
-    </div>
-    <div class="adminRow">
-        <div class="adminTitle">
             <smart-label asp-for="Published" />
         </div>
         <div class="adminData">
@@ -137,6 +133,62 @@
         <div class="adminData">
             <select asp-for="Visibility" asp-items="Html.GetLocalizedEnumSelectList(typeof(ProductVisibility))"></select>
             <span asp-validation-for="Visibility"></span>
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminSeparator">
+            <hr />
+        </div>
+    </div>
+    <div class="adminRow">
+        <div class="adminTitle">
+            <smart-label asp-for="ProductTypeId" />
+        </div>
+        <div class="adminData">
+            <select asp-for="ProductTypeId" asp-items="Html.GetLocalizedEnumSelectList(typeof(ProductType))"></select>
+            <span asp-validation-for="ProductTypeId"></span>
+        </div>
+    </div>
+    <div id="grouped-product-config">
+        @*
+            TODO: (mg) Bad usability (repetitive): Make global settings for page size, expand/collapse and header fields. Make them overridable on product level. TBD with MC.
+        TODO: (mg) Info: the default value of the global expand/collapse setting should be TRUE.
+        *@
+        <div class="adminRow">
+            <div class="adminTitle">
+                <smart-label asp-for="GroupedProductConfiguration.PageSize" />
+            </div>
+            <div class="adminData">
+                <editor asp-for="GroupedProductConfiguration.PageSize" />
+                <span asp-validation-for="GroupedProductConfiguration.PageSize"></span>
+            </div>
+        </div>
+        <div class="adminRow">
+            <div class="adminTitle">
+                <smart-label asp-for="GroupedProductConfiguration.SearchMinAssociatedCount" />
+            </div>
+            <div class="adminData">
+                <editor asp-for="GroupedProductConfiguration.SearchMinAssociatedCount" />
+                <span asp-validation-for="GroupedProductConfiguration.SearchMinAssociatedCount"></span>
+            </div>
+        </div>
+        <div class="adminRow">
+            <div class="adminTitle">
+                <smart-label asp-for="GroupedProductConfiguration.Collapsible" />
+            </div>
+            <div class="adminData">
+                <input asp-for="GroupedProductConfiguration.Collapsible" data-toggler-for="#grouped-product-config-collapsible" />
+                <span asp-validation-for="GroupedProductConfiguration.Collapsible"></span>
+            </div>
+        </div>
+        <div id="grouped-product-config-collapsible" class="adminRow">
+            <div class="adminTitle">
+                <smart-label asp-for="GroupedProductConfiguration.HeaderFields" />
+            </div>
+            <div class="adminData">
+                <select asp-for="GroupedProductConfiguration.HeaderFields" asp-items="ViewBag.AssociatedProductsHeaderFields" multiple="multiple" data-tags="true"></select>
+                <span asp-validation-for="GroupedProductConfiguration.HeaderFields"></span>
+            </div>
         </div>
     </div>
     <div sm-if="Model.Id > 0 && Model.AssociatedToProductId > 0" class="adminRow">
@@ -159,6 +211,11 @@
         </div>
     </div>
 </div>
+
+@if (!languageService.IsMultiLanguageEnvironment())
+{
+    <hr />
+}
 
 @(Html.LocalizedEditor<ProductModel, ProductLocalizedModel>("product-info-localized",
 	@<text>
@@ -211,7 +268,9 @@
                     <smart-label asp-for="ShortDescription" />
 			    </div>
 			    <div class="adminData">
-                    <textarea asp-for="ShortDescription"></textarea>
+                    <ai-text-creation asp-for="ShortDescription" entity-name="@Model.Name" entity-type="Product">
+                        <textarea asp-for="ShortDescription"></textarea>
+                    </ai-text-creation>
 				    <span asp-validation-for="ShortDescription"></span>
 			    </div>
 		    </div>
@@ -220,13 +279,14 @@
                     <smart-label asp-for="FullDescription" />
 			    </div>
                 <div class="adminData wide">
-                    <editor asp-for="FullDescription" />
+                    <ai-rich-text-creation asp-for="FullDescription" entity-name="@Model.Name" entity-type="Product">
+                        <editor asp-for="FullDescription" />
+                    </ai-rich-text-creation>
                     <span asp-validation-for="FullDescription"></span>
                 </div>
 		    </div>
 	    </div>
-	</text>
-    )
+	</text>)
 )
 
 <div class="adminContent">
@@ -503,11 +563,11 @@
             <smart-label asp-for="IsShippingEnabled" />
         </div>
         <div class="adminData">
-            <input asp-for="IsShippingEnabled" data-toggler-for="#pnlIsShipEnabled" />
+            <input asp-for="IsShippingEnabled" data-toggler-for="#pnlShippingEnabled" />
             <span asp-validation-for="IsShippingEnabled"></span>
         </div>
     </div>
-    <div id="pnlIsShipEnabled">
+    <div id="pnlShippingEnabled">
         <div class="adminRow">
             <div class="adminTitle">
                 <smart-label asp-for="DeliveryTimeId" />
@@ -522,11 +582,11 @@
                 <smart-label asp-for="IsFreeShipping" />
             </div>
             <div class="adminData">
-                <input asp-for="IsFreeShipping" />
+                <input asp-for="IsFreeShipping" data-toggler-for="#ShippingChargeContainer" data-toggler-reverse="true" />
                 <span asp-validation-for="IsFreeShipping"></span>
             </div>
         </div>
-        <div class="adminRow">
+        <div id="ShippingChargeContainer" class="adminRow">
             <div class="adminTitle">
                 <smart-label asp-for="AdditionalShippingCharge" />
             </div>

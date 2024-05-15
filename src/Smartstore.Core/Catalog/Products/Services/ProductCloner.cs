@@ -108,6 +108,12 @@ namespace Smartstore.Core.Catalog.Products
                 clone.CreatedOnUtc = utcNow;
                 clone.UpdatedOnUtc = utcNow;
 
+                // Reset properties of ratings and reviews.
+                clone.ApprovedRatingSum = 0;
+                clone.NotApprovedRatingSum = 0;
+                clone.ApprovedTotalReviews = 0;
+                clone.NotApprovedTotalReviews = 0;
+
                 // Category mappings.
                 clone.ProductCategories.AddRange(product.ProductCategories.Select(x => new ProductCategory
                 {
@@ -211,15 +217,13 @@ namespace Smartstore.Core.Catalog.Products
 
         private async Task ProcessSlugs(Product product, Product clone, IEnumerable<Language> languages)
         {
-            var slugResult = await _urlService.ValidateSlugAsync(clone, string.Empty, true);
-            await _urlService.ApplySlugAsync(slugResult, true);
+            await _urlService.SaveSlugAsync(clone, string.Empty, clone.GetDisplayName(), true);
 
             foreach (var lang in languages)
             {
                 string name = product.GetLocalized(x => x.Name, lang, false, false);
 
-                slugResult = await _urlService.ValidateSlugAsync(clone, string.Empty, name, false, lang.Id);
-                await _urlService.ApplySlugAsync(slugResult, true);
+                await _urlService.SaveSlugAsync(clone, string.Empty, name, false, lang.Id, true);
             }
         }
 

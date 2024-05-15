@@ -55,7 +55,7 @@
     </div>
 
     <div class="alert alert-info alert-dismissible">
-        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <button type="button" class="btn-close" data-dismiss="alert"></button>
         <h4>@T("Admin.Configuration.Plugins.Description")</h4>
         <ol>
             <li>@Html.Raw(T("Admin.Configuration.Plugins.Description.Step1", "uploadpackage", "#uploadpackage-window"))</li>
@@ -252,10 +252,16 @@
 		}
 
 		// Create tooltip for ExecuteTasks button which informs
-		// about modules to be installed and uninstalled
-		btnExecuteTasks.tooltip({
-			html: true,
-			placement: 'bottom',
+        // about modules to be installed and uninstalled
+        btnExecuteTasks.tooltip({
+            html: true,
+            placement: 'bottom',
+            popperConfig: {
+                modifiers: {
+                    flip: { enabled: false },
+                    arrow: { element: '.arrow' }
+                }
+            },
 			title: function () {
 				let text = '';
 
@@ -272,7 +278,7 @@
 					_.each(dropdownInstall.val(), function (val, i) {
 						text += '<div class="al">{0}</div>'.format(getModuleFriendlyName(dropdownInstall, val));
 					});
-				}
+                }
 
 				return text;
 			}

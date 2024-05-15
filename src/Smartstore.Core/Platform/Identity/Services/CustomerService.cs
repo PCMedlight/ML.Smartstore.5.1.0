@@ -159,7 +159,7 @@ namespace Smartstore.Core.Identity
             {
                 query =
                     from c in query
-                    where !_db.ShoppingCartItems.IgnoreQueryFilters().Any(sci => sci.CustomerId == c.Id)
+                    where !_db.ShoppingCartItems.IgnoreQueryFilters().Any(sci => sci.CustomerId == c.Id && sci.Active)
                     select c;
             }
             if (registrationFrom.HasValue)
@@ -214,9 +214,10 @@ namespace Smartstore.Core.Identity
                 numberOfDeletedCustomers += numDeleted;
             }
 
-            if (numberOfDeletedCustomers + numberOfDeletedAttributes > 10000 && !cancelToken.IsCancellationRequested && _db.DataProvider.CanShrink)
+            if (numberOfDeletedCustomers + numberOfDeletedAttributes > 10000 && !cancelToken.IsCancellationRequested && _db.DataProvider.CanOptimizeTable)
             {
-                await CommonHelper.TryAction(() => _db.DataProvider.ShrinkDatabaseAsync(true, cancelToken));
+                var tableName = _db.Model.FindEntityType(typeof(Customer)).GetTableName();
+                await CommonHelper.TryAction(() => _db.DataProvider.OptimizeTableAsync(tableName, cancelToken));
             }
 
             Logger.Debug("Deleted {0} guest customers including {1} generic attributes.", numberOfDeletedCustomers, numberOfDeletedAttributes);
@@ -232,7 +233,7 @@ namespace Smartstore.Core.Identity
             {
                 var cookieExpiry = customer.CustomerGuid == Guid.Empty
                     ? DateTime.Now.AddMonths(-1)
-                    : DateTime.Now.AddDays(365); // TODO make configurable
+                    : DateTime.Now.AddDays(_privacySettings.VisitorCookieExpirationDays);
 
                 // Set visitor cookie
                 var cookieOptions = new CookieOptions

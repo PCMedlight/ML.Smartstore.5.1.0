@@ -11,11 +11,13 @@ namespace Smartstore.Web.Models.Customers
         public string UserName { get; set; }
         public bool AllowViewingProfiles { get; set; }
         public int AvatarPictureSize { get; set; }
+        public bool DisplayRing { get; set; }
     }
 
     public partial class CustomerAvatarEditModel : ModelBase
     {
         public string MaxFileSize { get; set; }
+        public long MaxFileSizeValue { get; set; }
         public CustomerAvatarModel Avatar { get; set; }
     }
 }

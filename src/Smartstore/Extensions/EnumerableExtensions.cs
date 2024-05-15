@@ -109,6 +109,10 @@ namespace Smartstore
             {
                 return list.AsReadOnly();
             }
+            else if (source is IList<T> list2)
+            {
+                return new ReadOnlyCollection<T>(list2);
+            }
 
             return new ReadOnlyCollection<T>(source.ToList());
         }
@@ -206,8 +210,8 @@ namespace Smartstore
         /// <returns>Array of distinct elements.</returns>
         public static TKey[] ToDistinctArray<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> elementSelector)
         {
-            Guard.NotNull(source, nameof(source));
-            Guard.NotNull(elementSelector, nameof(elementSelector));
+            Guard.NotNull(source);
+            Guard.NotNull(elementSelector);
 
             return source.Select(elementSelector).Distinct().ToArray();
         }

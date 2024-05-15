@@ -28,8 +28,6 @@ namespace Smartstore.Core.Content.Menus
 
         public DatabaseMenu(
             string menuName,
-            ICommonServices services,
-            IMenuPublisher menuPublisher,
             Lazy<ICatalogSearchService> catalogSearchService,
             Lazy<ICategoryService> categoryService,
             CatalogSettings catalogSettings,
@@ -39,8 +37,6 @@ namespace Smartstore.Core.Content.Menus
             Guard.NotEmpty(menuName);
 
             Name = menuName;
-            Services = services;
-            MenuPublisher = menuPublisher;
 
             _catalogSearchService = catalogSearchService;
             _categoryService = categoryService;
@@ -218,12 +214,12 @@ namespace Smartstore.Core.Content.Menus
                 var store = Services.StoreContext.CurrentStore;
                 var customerRoleIds = Services.WorkContext.CurrentCustomer.GetRoleIds();
 
-                var query = db.Menus
+                var menuItemQuery = db.Menus
                     .ApplyStandardFilter(Name, null, store.Id, customerRoleIds)
                     .ApplyMenuItemFilter(store.Id, customerRoleIds)
                     .Include(x => x.Menu);
 
-                entities = await query.ToListAsync();
+                entities = await menuItemQuery.ToListAsync();
             }
             else
             {

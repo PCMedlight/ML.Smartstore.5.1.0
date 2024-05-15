@@ -9,8 +9,23 @@ namespace Smartstore.ShippingByWeight.Migrations
     {
         const string shippingByWeightTable = "ShippingByWeight";
 
+        static readonly string[] _columns = new[]
+        {
+            nameof(ShippingRateByWeight.From),
+            nameof(ShippingRateByWeight.To),
+            nameof(ShippingRateByWeight.ShippingChargePercentage),
+            nameof(ShippingRateByWeight.ShippingChargeAmount),
+            nameof(ShippingRateByWeight.SmallQuantitySurcharge),
+            nameof(ShippingRateByWeight.SmallQuantityThreshold)
+        };
+
         public override void Up()
         {
+            foreach (var column in _columns)
+            {
+                FixArithmeticOverflow(column);
+            }
+
             MigrateInternal(4);
         }
 
@@ -25,8 +40,37 @@ namespace Smartstore.ShippingByWeight.Migrations
             Alter.Column(nameof(ShippingRateByWeight.To)).OnTable(shippingByWeightTable).AsDecimal(18, precision).NotNullable();
             Alter.Column(nameof(ShippingRateByWeight.ShippingChargePercentage)).OnTable(shippingByWeightTable).AsDecimal(18, precision).NotNullable();
             Alter.Column(nameof(ShippingRateByWeight.ShippingChargeAmount)).OnTable(shippingByWeightTable).AsDecimal(18, precision).NotNullable();
-            Alter.Column(nameof(ShippingRateByWeight.SmallQuantitySurcharge)).OnTable(shippingByWeightTable).AsDecimal(18, precision).NotNullable();
-            Alter.Column(nameof(ShippingRateByWeight.SmallQuantityThreshold)).OnTable(shippingByWeightTable).AsDecimal(18, precision).NotNullable();
+
+            // Only alter if column exists else create.
+            if (Schema.Table(shippingByWeightTable).Column(nameof(ShippingRateByWeight.SmallQuantitySurcharge)).Exists())
+            {
+                Alter.Column(nameof(ShippingRateByWeight.SmallQuantitySurcharge)).OnTable(shippingByWeightTable).AsDecimal(18, precision).NotNullable();
+            }
+            else
+            {
+                Alter.Table(shippingByWeightTable).AddColumn(nameof(ShippingRateByWeight.SmallQuantitySurcharge)).AsDecimal(18, precision).NotNullable().WithDefaultValue(0);
+            }
+
+            // Only alter if column exists else create.
+            if (Schema.Table(shippingByWeightTable).Column(nameof(ShippingRateByWeight.SmallQuantityThreshold)).Exists())
+            {
+                Alter.Column(nameof(ShippingRateByWeight.SmallQuantityThreshold)).OnTable(shippingByWeightTable).AsDecimal(18, precision).NotNullable();
+            }
+            else
+            {
+                Alter.Table(shippingByWeightTable).AddColumn(nameof(ShippingRateByWeight.SmallQuantityThreshold)).AsDecimal(18, precision).NotNullable().WithDefaultValue(0);
+            }
+        }
+
+        private void FixArithmeticOverflow(string column)
+        {
+            try
+            {
+                IfDatabase("sqlserver").Execute.Sql($"UPDATE [dbo].[{shippingByWeightTable}] SET [{column}] = 99999999999999 WHERE [{column}] > 99999999999999");
+            }
+            catch
+            {
+            }
         }
     }
 }

@@ -155,7 +155,7 @@ body {
 
     @include media-breakpoint-up(sm) {
         margin: 0 var(--content-padding-x);
-        border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        border-radius: 0.75rem 0.75rem 0 0;
     }
 
     .popup & {
@@ -237,7 +237,7 @@ body {
             vertical-align: top;
         }
 
-        a:not(.btn) {
+        a:not(.btn):not(.dropdown-item) {
             text-decoration: none;
             font-family: $font-family-sans-serif;
             font-size: 12px;
@@ -251,9 +251,7 @@ body {
         flex: 0 0 auto;
         width: auto;
         max-width: none; // Reset earlier grid tiers
-        padding-left: 5px;
-        padding-right: 0;
-
+        padding-inline: 5px 0;
         display: flex;
         align-items: center;
         gap: 0.4rem;
@@ -273,15 +271,15 @@ body {
     &.sticky {
         position: fixed;
         z-index: $zindex-sticky;
-        left: var(--sticky-header-left);
-        right: var(--sticky-header-right);
+        inset-inline-start: var(--sticky-header-left);
+        inset-inline-end: var(--sticky-header-right);
         padding: calc(var(--content-padding-y) / 2) var(--content-padding-x);
         background: #fff;
-        box-shadow: 0 10px 30px 0 rgba(#000, .05);
+        box-shadow: 0 10px 30px 0 rgba($black, .05);
 
         .modal-open & {
             // add the killed scrollbar width
-            margin-right: 17px !important;
+            margin-inline-end: 17px !important;
         }
     }
 }
@@ -292,22 +290,23 @@ body {
     top: 0;
 }
 
-.has-left-sidebar {
-    .page-main {
-        grid-template-columns: 206px 1fr;
-        --sticky-header-left: 206px;
-        --sticky-header-right: 0;
-    }
+@include media-breakpoint-up(md) {
+    .has-left-sidebar {
+        .page-main {
+            grid-template-columns: 206px 1fr;
+            --sticky-header-left: 206px;
+            --sticky-header-right: 0;
+        }
 
-    #content {
-        grid-column: 2 / -1;
-        margin-left: 0;
-        margin-right: 0;
-        border-top-right-radius: 0;
-    }
+        #content {
+            grid-column: 2 / -1;
+            margin-inline: 0;
+            border-start-end-radius: 0;
+        }
 
-    .locale-editor {
-        max-width: calc(100dvw - var(--sticky-header-left) - (var(--content-padding-x) * 2));
+        .locale-editor {
+            max-width: calc(100dvw - var(--sticky-header-left) - (var(--content-padding-x) * 2));
+        }
     }
 }
 
@@ -325,10 +324,6 @@ body {
         --content-row: var(--content-height);
     }
 
-    &.has-left-sidebar .page-main {
-        grid-template-columns: 206px minmax(100px, 1fr) !important;
-    }
-
     .cph {
         height: 100%;
     }
@@ -337,6 +332,12 @@ body {
         overflow: hidden;
         display: flex;
         flex-flow: column;
+    }
+}
+
+@include media-breakpoint-up(md) {
+    .spa-layout.has-left-sidebar .page-main {
+        grid-template-columns: 206px minmax(100px, 1fr) !important;
     }
 }
 
@@ -388,12 +389,12 @@ body {
       --dropdown-divider-margin-y: 0.5rem;
       --dropdown-border-radius: 8px;
       --shadow-intensity: 0.7;
+      --dropdown-box-shadow: #{$box-shadow-lg};
         margin-top: -2px;
-        box-shadow: $box-shadow-lg;
     }
 
     #navbar-menu .nav-item > .dropdown-menu {
-        @include bubble("top", "near", 8, #fff, $dropdown-border-color, 10px);
+        @include bubble("top", "near", 8, var(--dropdown-bg), var(--dropdown-border-color), 10px);
     }
 
     [data-id="nav-modules"] li:not([data-id="modules-manage"]) .dropdown-item {
@@ -488,13 +489,52 @@ body {
 // Settings Menu
 // --------------------------------------------------------------
 
-.menu-settings {
-    .nav-link {
-        padding-left: 0.25rem !important;
-    }
+.settings-menu {
+    --list-group-bg: transparent;
+    --list-group-border-width: 0;
+    --list-group-border-radius: 0;
+    --list-group-item-padding-x: 12px;
+    --list-group-item-padding-y: 10px;
+    --list-group-action-color: var(--gray-700);
+    --list-group-action-hover-color: var(--gray-900);
+    --list-group-action-hover-bg: #{rgba($black, 0.06)};
+    --list-group-action-hover-bg: var(--gray-300);
+    --list-group-action-active-color: var(--list-group-action-hover-color);
+    --list-group-action-active-bg: var(--gray-400);
+    --list-group-active-bg: var(--list-group-action-hover-bg);
 
-    .nav-link.active {
-        z-index: 99;
+    gap: 1px;
+
+    .list-group-item {
+        @include rfs($font-size-sm);
+        align-items: center !important;
+        transition: background-color 0.12s ease;
+
+        @include media-breakpoint-up(md) {
+            @include border-right-radius(#{'0 !important'});
+        }
+
+        &:before {
+            display: none !important;
+        }
+
+        > .list-group-item-icon {
+            margin-inline-end: 1rem;
+
+             > .bi {
+                vertical-align: -3px;
+            }
+
+            > i {
+                max-width: 16px;
+            }
+        }
+
+        &:active:not(.active) {
+            .bi-circle {
+                fill: transparent;
+            }
+        }
     }
 }
 
@@ -916,7 +956,7 @@ legend {
         padding: 0.4rem;
         border-bottom: 1px solid $border-color;
         background-color: $gray-100;
-        @include border-left-radius(var(--border-radius-md));
+        @include border-top-radius(var(--border-radius-md));
         flex-wrap: nowrap;
         overflow-x: auto;
 
@@ -1388,23 +1428,16 @@ a.editable {
 // --------------------------------------------------------------
 
 
-#order-form .checkout-attributes {
-    table {
-        //margin-left: auto
-    }
-
+#order-edit .checkout-attributes {
     .attr-caption {
         font-weight: $font-weight-medium;
-        text-align: end;
         padding-inline-end: 10px;
-
         &:after {
             content: ': '
         }
     }
-
     .attr-value {
-        text-align: left;
+        text-align: start;
     }
 }
 
@@ -1483,7 +1516,7 @@ a.editable {
         }
 
         .select2-selection__clear {
-            margin-left: 3px;
+            margin-inline-start: 3px;
         }
     }
 }
@@ -1596,7 +1629,7 @@ a.editable {
 }
 
 .rule-operator > .dropdown-menu {
-    min-width: 100%
+    --dropdown-min-width: 100%
 }
 
 
@@ -1654,4 +1687,16 @@ a.editable {
     z-index: $zindex-dropdown - 1;
     transform: rotate(90deg) translateX(100%);
     transform-origin: right top;
+}
+
+// AI dropdown
+// --------------------------------------------------------------
+
+.cnt-ai-dialog-opener {
+    display: block !important;
+}
+
+.ai-dialog-opener {
+    pointer-events: initial !important;
+    height: auto !important;
 }

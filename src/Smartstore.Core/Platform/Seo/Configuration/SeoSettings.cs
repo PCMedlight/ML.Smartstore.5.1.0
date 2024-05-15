@@ -1,4 +1,5 @@
-﻿using Smartstore.Core.Configuration;
+﻿using System.Collections.Frozen;
+using Smartstore.Core.Configuration;
 using Smartstore.Core.Localization;
 
 namespace Smartstore.Core.Seo
@@ -69,12 +70,12 @@ namespace Smartstore.Core.Seo
         };
 
         private readonly object _lock = new();
-        private Dictionary<char, string> _charConversionMap = null;
+        private FrozenDictionary<char, string> _charConversionMap = null;
 
         public SeoSettings()
         {
-            ExtraRobotsDisallows = new();
-            ExtraRobotsAllows = new();
+            ExtraRobotsDisallows = [];
+            ExtraRobotsAllows = [];
             SeoNameCharConversion = string.Join(Environment.NewLine, DefaultCharConversions);
         }
 
@@ -126,6 +127,7 @@ namespace Smartstore.Core.Seo
 
         public List<string> ExtraRobotsDisallows { get; set; }
         public List<string> ExtraRobotsAllows { get; set; }
+        public string ExtraRobotsLines { get; set; }
 
         /// <summary>
         /// A value indicating whether to load all URL records and active slugs on application startup
@@ -159,10 +161,7 @@ namespace Smartstore.Core.Seo
             {
                 lock (_lock)
                 {
-                    if (_charConversionMap == null)
-                    {
-                        _charConversionMap = CreateCharConversionMap(SeoNameCharConversion);
-                    }
+                    _charConversionMap ??= CreateCharConversionMap(SeoNameCharConversion).ToFrozenDictionary();
                 }
             }
 
@@ -173,7 +172,7 @@ namespace Smartstore.Core.Seo
         {
             var map = new Dictionary<char, string>();
 
-            foreach (var conversion in charConversion.GetLines(true, true))
+            foreach (var conversion in charConversion.ReadLines(true, true))
             {
                 if (conversion.SplitToPair(out var left, out var right, ";") && left.HasValue())
                 {

@@ -1,52 +1,296 @@
 # Release Notes
 
+## Smartstore 5.2.0
+
+### Breaking Changes
+- Removed Sofort provider from PayPal module (disabled by PayPal on 18.04.2024) 
+
+### New Features
+
+- **Conditional product attributes**
+  - Makes the visibility of an attribute dependent on the selection state of other attributes.
+  - Copying attributes, options and rules from one product to another.
+- **Simplified checkout process**
+  - Quick-Checkout allows to skip addresses, shipping and payment method selection if these are known.
+  - One-click checkout for sales at retail terminals.
+- **Essential specification attributes**
+  - Specification attributes marked as an *essential feature* are displayed in the checkout.
+- **Cart & wishlist enhancements**
+  - Disable cart items via checkbox.
+  - Show delivery time, stock info, weight, additional shipping surcharge and brand.
+- **Grouped product enhancements**
+  - Optional presentation of associated products as collapsible/expandable panels.
+  - Added paging for associated products.
+- Updated to **.NET 8**
+  - Faster app startup
+  - Increased overall performance
+  - ~10 % less memory usage after app start
+- New app setting for MS SQL Server compatibility level
+- Enhanced database optimization and vacuum operations
+- Vacuum single database table
+- #909 Allow to control the product availability based on the existence of an attribute combination.
+- MegaSearch: setting to place the search hits of unavailable products further back in the search list.
+- Affiliates
+  - #896 Added a cart rule for affiliates.
+  - Added a button to remove the assignment of a customer to an affiliate on customer edit page.
+- Import news from RSS news feeds.
+- #971 Add a cart rule to check if the current customer is authenticated with a certain external authentication method.
+- Reverse proxy: added support for `X-Forwarded-Prefix` header (for `PathBase` resolution)
+- Page Builder
+	- Added **AudioPlayer** block
+- #858 Implemented Paypal package tracking
+- #997 Added setting to disable display of product tags on the product detail page  
+
+### Improvements
+
+- #876 Changing password in backend via modal dialog.
+- #871 Show the total media file size in dashboard stats.
+- Theming
+  - Revamped dashboard stats
+  - Activate .spa-layout only on screen height > 600px (DataGrid is unusable in mobile landscape mode otherwise)
+- Page Builder
+  - Fixed *boxed titles* spacing and line-height issues
+- Web API
+  - Enabling CORS.
+  - #928 mask the secret key in backend API user list.
+  - #1057 add endpoints for `WalletHistory` entity.
+  - #929 add endpoints for PageBuilder stories, story blocks and import/export.
+- Security
+  - #886 Replace CoreFTP with FluentFTP.
+  - #1004 Add captcha to password recovery form.
+- Add a setting for a maximum order age. For orders over this age, no more messages such as *shipped* or *delivered* may be sent to the buyer.
+- Skrill: added support for new parameter `website_id` (required for Giropay and iDeal payments).
+- GMC
+  - Only export images (not videos or other media types).
+  - Export *out of stock* if inventory management and the buy button are deactivated.
+- #912 Add a setting to use the `CultureInfo.NativeName` in language selector instead of the language name maintained in backend.
+- #968 Allow to specify a language in which the notification is to be sent for manually created gift cards.
+- Added meta properties name and uploadDate for videos
+- (DEV) Database migrations: Long running data seeders can now be run during the request stage to overcome app startup timeout issues.
+- #965 Prevent adding of products to the shopping cart by system customers such as *builtin@search-engine-record.com*.
+- Increased the default maximum file size of an avatar and added a customer setting for this in backend.
+- Stripe: Update shipping address on confirm order.
+- Addresses: make first and last name optional if a company name has been specified.
+- #1012 Estimate shipping costs without rules if no shipping method was found with rules.
+- PayPal: Orders were cancled when capturing was declined, now they are being voided instead.
+- #1020 Prevent creation of unnecessary Stripe "payment intent".
+- Added deletion of selected rows to the data grid of manufacturers, discounts, menus and topics.
+
+### Bugfixes
+
+- Fixed a new shipping address is used as the billing address in checkout.
+- Fixed only the first product attribute of list type attributes was displayed on the cart and order page.
+- Fixed an unavailable attribute was not grayed-out if the product has at least one non list-type attribute.
+- Fixed cart page shows 0 bundle item price if per-item pricing is deactivated.
+- #996 Limited to customer roles is not working for topics that are displayed as widgets.
+- #914 Featured sorting on category and manufacturer pages not applied when using standard search.
+- Product attributes are lost when navigating to *Ask Question* page multiple times.
+- #1024 Apply preselected options of required attributes of added products when required products are automatically added to shopping cart.
+- Fixed a product can only be added to the shopping cart with a quantity of 1 if the stock quantity is below 0.
+- Fixed the discount amount of an order can have an incorrect value if a discount rule was applied during the subtotal calculation.
+- #957 Fixed prices should not be hidden if the *Access Shopping Cart* permission has not been granted.
+- Fixed tier prices of product bundles were not taken into account in product lists if the lowest possible price is to be displayed.
+- #1041 Fixed `ArgumentException` "The resource object with key *DateHumanize_MultipleMonthsAgo* was not found (Parameter *resourceKey*)" in Czech language (probably also appears in others).
+- Fixed `NullReferenceException` calling search page without any search term.
+- Fixed `NullReferenceException` *typeFilter was null* when uploading a video.
+- Fixed `NullReferenceException` on product detail page if the main menu is not published.
+- MegaSearch: hits from an SKU search tend to appear too far back.
+- Tax by region: fixed tax rate was not applied if asterisk placeholder character was saved for zip code.
+- #921 IOException "The filename, directory name, or volume label syntax is incorrect" when `MediaSettings.AppendFileVersionToUrl` is activated.
+- #922 Newsletter subscription event not triggered upon email confirmation.
+- Language selector in off-canvas menu should show the same language name as in the main menu.
+- #936 Password protected topic was not displayed after password has been entered.
+- #955 Searching a product by product code in grids returns an infinite list.
+- Fixed the reward points for purchases setting was not saved in multi-store mode.
+- #960 Setting `ManufacturerItemsToDisplayInOffcanvasMenu` cannot be changed in backend.
+- Fixed offcanvas cart issue in mobile browsers (buttons in the footer were sometimes truncated).
+- Page Builder
+  - Some radio button groups were not deselectable
+  - Story min-height (medium | tall) often resulted in broken page layout
+  - #991 topic target *homepage* was not imported correctly.
+- Forum:
+  - #951 The forum post page counter is always incremented by 2 when the page is opened.
+  - Fixed HTML links are not displayed in posts.
+- Fixed a filter reset of the product grid does not work correctly.
+- Fixed validation issues when saving guest customers.
+- #1066 Web API: fixed schema validation errors for `MaxLength` attribute and OpenAPI `OperationId`.
+- #1072 Missing customer welcome message after approval of the registration by admin.
+- #897 Discount code input seems to be confirmed (border color and check icon)
+- #964 Removed meta information from publication according to catalog settings.
+- Fixed shoping cart MinOrderValidation 
+- Added quantity information on non-editable wishlist page.
+- Some external authentication methods (like AmazonPay) were not displayed on customer pages.
+- Hitting the return key in the text field of a product variant resulted in a 404 status error.
+- Fixed *QuantityBelowStoreOwnerNotification* was sent twice.
+- #1001 MediaManager: fix *moov atom not found* ffmpeg issue in `VideoHandler`.
+- Fixed the e-mail subject was not transferred when sending an e-mail from customer edit page.
+- Fixed offcanvas problem whith mega sized page builder stories.
+- PayPal: Fixed payment discount problem (discount from a formerly choosen payment method was applied).
+- #1042 Fixed broken roxy file manager.
+- #969 Promo badges are not rendered in frontend due to type mismatch.
+- Google Analytics: Fixed problem with single quotation mark in category name.
+- #983 Uploaded product variant file is lost after selecting any other variant option (in product details).
+- Fixed missing line breaks for product attributes in the print/PDF view of orders.
+- SEO: Marked product list filter option links as nofollow.
+- SEO: fixed redirection error for TrailingSlashRule setting redirect.
+- Hide the cookie manager for topics that need to be fully visible without being overlayed by the cookie manager dialog.
+- #1091 Allow recursive cache access in `AlbumRegistry.GetAlbumDictionary()`
+- #1088 Special characters (like Umlaut) are not displayed correctly in client-side messages.
+- PayPal: Fixed VAT exempt & currency conversion problems
+
+
 ## Smartstore 5.1.0
 
 ### New Features
 
+- Currency rounding:
+  - Added currency properties and settings for rounding: midpoint rounding, skip rounding when displaying net prices, round unit price before or after quantity multiplication
+  - Amounts are always rounded when calculating the order total to avoid rounding differences (usually of 1 cent)
+- The **recycle bin** for products enables to restore and permanently delete products
+- **payever** plugin (commercial)
 - **Botsonic** plugin (commercial)
-- #745 Page Builder: depend story visibility on user roles.
+- Media Manager now allows image files to be re-processed based on the current media and post processor settings.
+- Cart quantity input control now respects the product's available stock (as max input)
+- #823 Added canonical URL to search pages
+- #745 Page Builder: depend story visibility on user roles
 - Added option to configure allowed characters for user names 
+- #836 Added option to define additional lines for robots.txt
+
+### Theming
+
+- Infrastructure
+  - Forked & customized **Bootstrap** framework. Our implementation combines version 4.6 and 5.x. We have not made any modifications to the JavaScript files; only SCSS has been customized. The primary objective is to maintain compatibility with the original Bootstrap documentation for developer convenience.
+  - Logical CSS for better RTL support
+  - Added subtle and emphasis colors to the color system
+  - Revamped button styling
+  - Revamped dropdown styling
+  - Revamped select2 styling
+  - Revamped pagination styling
+  - Revamped modal window styling
+  - Badges: new variants and modifiers `.badge-subtle`, `.badge-outline-*`, `.badge-ring`, `.badge-counter`
+  - Revamped check & radio styling: new variants and modifiers `.form-check-solo`, `.form-check-{color}`, `.form-switch`, `.form-switch-lg`
+  - Many improvements to input groups, button groups and collapsibles
+  - Sass variables for all easings, contained in `_easings.scss`
+  - Dropped responsive (rfs) spacing
+- Frontend
+  - New grid breakpoint **xxl** (1400px)
+  - Made components *rounder* by slightly increasing border-radius variables
+  - Revamped product listing action bar styling (sorting, view mode, pagination)
+  - On screens < md, the offcanvas window for product filter slides in from bottom and also provides the sorting options
+  - Revamped offcanvas main menu
+  - Revamped image gallery styling
+  - Revamped cart, wishlist & order confirm
+  - Fixed Slick slider dotted navigation responsiveness issues
+  - Slightly improved InstantSearch box and dropdown
+  - Revamped product tags component
+  - Dropdown product quantity input (automatically rendered instead of spinner if possible quantities do not exceed 100).
+  - Revamped checkout progress indicator
+  - Revamped scroll-to-top button
+  - Revamped cookie consent dialog styling
+  - Dropped *Triple Date Picker* component in favour of browser native date picker
+  - Unstyled links are underlined by default
+  - New responsive and collapsible MyAccount menu with avatar image, customer name and email address in header.
+- Backend
+  - Revamped Configuration / Settings and made settings menu responsive
+  - Revamped plugin and provider managers
+  - New colorpicker component with swatches
+  - Revamped number input styling
+  - Locale editor tab navigation has been redesigned and is now more responsive
 
 ### Improvements
 
-- Increased performance: added hash codes to attribute combinations. With a large number of attribute combinations, variants are found much faster now.
+- Increased performance:
+  - Added hash codes to attribute combinations. With a large number of attribute combinations, variants are found much faster now.
+  - Fixed slow loading of product categories for a large number of categories. Price calculation and product export were affected.
+  - MediaSearcher always performed a LIKE search for terms (the equals operator was missing)
+  - #820 More scalable media service dupe file detection
 - Improved plugin & provider manager UI
+- MegaSearch: #842 added hit count for availability filter. Hide filter if it leads to no further hits.
 - Use billing address if there is no shipping address and tax calculation is based on shipping address.
 - #580 Added caching for live currency exchange rates.
 - #767 Handle tier prices in depending prices module.
 - #378 Remove the assignments of products to a tax category when the tax category is deleted.
-- Blog: added counter for pageviews.
+- Blogs and news: added counter for pageviews and author field. Both displayed for admins only.
 - Product tags:
   - #388 Ajaxify product tag selection in backend.
   - Added search panel to product tags grid.
+- Web API:
+  - #142 Take back in stock notifications into account.
+  - #805 Add endpoints to assign discounts to entities.
+  - #821 Add endpoints for RecurringPayment and RecurringPaymentHistory.
+  - Add endpoints for the recycle bin of products.
+- Import:
+  - #390 Add a setting for whether to send the completion email.
+  - #377 Import cross- and checkout-selling products.
 - #503 Don't round quantity unit amount for PAnGV.
 - #403 Added preview image link of NewsItem to RSS feed.
-- #390 Import: add a setting whether to send the completion email.
 - #276 Enable to set the time of day for start and end date of discounts.
-- #142 Web API do not take back in stock notifications into account.
 - #486 Add setting to capture payment when order status changes to *complete*.
 - #782 Make the total weight of a shipment editable.
 - #782 Enable to mark shipments of an order as *shipped* or *delivered* via orders grid.
+- Added ability to edit delivery time in product grid
+- #807 Enable absolute Paths for DataExchangeSettings.ImageImportFolder.
+- #786 Replace TripleDatePicker with native input type date.
+- #804 Implemented the new TrustBadge integration mode, including new settings for positioning, color scheme, etc. 
+- #819 Fix zoom on product detail page when there is a large right column.
+- PayPal credit card: Removed address fields and integrated Strong Customer Authentication (SCA) instead.
+- #834 Make the expiration date of visitor cookies of guests configurable.
+- #493 Display quantity name plural when quantity unit is more then 1.
+- #847 EU check VAT service: switch from SOAP to REST API
+- #763 Display admin edit button for public entities on touch displays  
 
 ### Bugfixes
 
 - Price calculation:
   - Rounding differences between the subtotal and the sum of the line totals.
   - Manufacturer discount is ignored as soon as an attribute with a linked product is selected.
+- Product lists:
+  - Fixed do not show tax info in product lists if the product is tax exempt.
+  - Fixed call for price note not displayed in product lists.
 - MegaSearch:
   - Fixed incorrect search results when a multistore has different default languages configured.
   - Fixed an incorrect second search result, executed via a spell checker suggestion, when the first search did not return any hits.
+- Import:
+  - Fixed localized properties were not updated during import.
+  - Localized SeName was only updated when import file also contained a non-localized SeName column.
+  - Fixed duplicate imported images if they were assigned to several products within a batch.
+- Fixed the category navigation no longer shows the number of contained products after reindexing.
+- Fixed products associated to a grouped product cannot be deleted via associated products grid.
 - Fixed not yet awarded reward points were reduced when an order was deleted.
-- Web API: fixed 404 file swagger.json not found when opening Swagger documentation in a virtual directory.
+- Checkout attributes:
+  - Fixed wrong tax was applied to checkout attributes in checkout.
+  - Fixed checkout attributes that are not active anymore should not be applied.
+- Web API: 
+  - Fixed 404 file swagger.json not found when opening Swagger documentation in a virtual directory.
+  - #815 Import of customers via WebApi/OData sets PasswordFormat to 'clear'.
+- Fixed incorrect message when applying a discount coupon code on cart page.
+- Fixed the saving of multistore settings for default tax and default shipping address.
 - Fixed a scripting issue where the input focus of the direct debit payment form was mistakenly set to a wrong input element.
 - Fixed missing cache clearing after importing localized properties.
 - Output Cache: missing `Content-Type` header when serving page from cache
 - #531 Error reading import file with localized values of languages with the same UniqueSeoCode.
-- Import:
-  - Fixed localized properties were not updated during import.
-  - Localized SeName was only updated when import file also contained a non-localized SeName column.
+- Fixed discounts assigned to categories and limited to customer roles should be excluded from export and exported prices.
 - Fixed MainPictureId not applied on product edit page if missing and if there is only one picture assigned to a product.
+- Fixed product image gallery issue where no image was displayed at all.
+- #843 Additional shipping charge displayed in product details even if free shipping is activated.
+- Fixed "The requested service 'Other (Smartstore.Core.Rules.IRuleProvider)' has not been registered" when creating a rule.
+- Fixed #792 Downloaded language sometimes cannot be deleted when using SQLite.
+- Stripe: Fixed incorrect system name in several places.
+- Gift cards were not generated according to the order item quantity during order processing.
+- Fixed incorrect cart validation if minimum cart quantity and quantity step were configured for a product.
+- #810 Doubleclicking login button can lead to 400 BadRequest error page.
+- Fixed arithmetic overflow SqlException in `ShippingByWeight` and `ShippingByTotal` four decimal places migrations.
+- #776 PayPal credit card payment fails due to missing session PayPalOrderId entry.
+- #797 Incorrect validation when product can be added to the cart in single positions.
+- Manufacturer pictures were not displayed on product detail pages.
+- #828 Queued email identifier is 0 for order completed email.
+- #873 Category preview may show 404 page if the category is limited to a certain store.
+- Do not fallback to "Product is not available" delivery info on product detail page if the product is available.
+- #839 Output cache must be invalidated when menu items are added or edited.
+- OpenTrans: fixes RuntimeBinderException "cannot perform runtime binding on a null reference" when exporting shipping address.
+- Brand pictures weren't displayed in product lists.
+- Skin select2 if remote url is used (rules in admin area were unusable on touch devices).
+- When using Stripe or PayPal on cart page checkout attributes were reseted.
 
 
 ## Smartstore 5.0.5

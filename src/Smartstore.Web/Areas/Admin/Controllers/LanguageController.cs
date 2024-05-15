@@ -5,7 +5,6 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Xml;
 using Autofac;
-using Humanizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
@@ -80,7 +79,7 @@ namespace Smartstore.Admin.Controllers
                 if (lastImportInfos.TryGetValue(x.Id, out var info))
                 {
                     m.LastResourcesImportOn = Services.DateTimeHelper.ConvertToUserTime(info.ImportedOn, DateTimeKind.Utc);
-                    m.LastResourcesImportOnString = m.LastResourcesImportOn.Humanize(false);
+                    m.LastResourcesImportOnString = m.LastResourcesImportOn.ToHumanizedString(false);
                 }
 
                 if (x.Id == masterLanguageId)
@@ -144,6 +143,8 @@ namespace Smartstore.Admin.Controllers
             var model = new LanguageModel();
             AddLocales(model.Locales);
             await PrepareLanguageModel(model, null, false);
+
+            model.DisplayOrder = ((await _db.Languages.MaxAsync(x => (int?)x.DisplayOrder)) ?? 0) + 1;
 
             return View(model);
         }
@@ -260,8 +261,24 @@ namespace Smartstore.Admin.Controllers
                 return RedirectToAction(nameof(Edit), new { id = language.Id });
             }
 
-            _db.Languages.Remove(language);
-            await _db.SaveChangesAsync();
+            for (var i = 1; i <= 2; i++)
+            {
+                try
+                {
+                    _db.Languages.Remove(language);
+                    await _db.SaveChangesAsync();
+                    break;
+                }
+                catch
+                {
+                    // INFO: SQLite throws "Database disk image is malformed" when the database index IX_LocaleStringResource gets corrupted.
+                    // We observed this after Turkish was selected as the default language.
+                    if (_db.DataProvider.ProviderType == DbSystemType.SQLite)
+                    {
+                        await _db.Database.ExecuteSqlAsync($@"REINDEX LocaleStringResource");
+                    }
+                }
+            }
 
             NotifySuccess(T("Admin.Configuration.Languages.Deleted"));
 
@@ -476,7 +493,9 @@ namespace Smartstore.Admin.Controllers
         [Permission(Permissions.Configuration.Language.EditResource)]
         public async Task<ActionResult> ImportXml(int id, ImportModeFlags mode, bool updateTouched, int? availableLanguageSetId)
         {
-            var language = await _db.Languages.FindByIdAsync(id, false);
+            var language = await _db.Languages
+                .Include(x => x.LocaleStringResources)
+                .FindByIdAsync(id);
             if (language == null)
             {
                 return NotFound();
@@ -498,16 +517,16 @@ namespace Smartstore.Admin.Controllers
                 else if (availableLanguageSetId > 0)
                 {
                     var checkResult = await CheckAvailableResources();
-                    var availableResources = checkResult.Resources.First(x => x.Id == availableLanguageSetId.Value);
+                    var source = checkResult.Resources.First(x => x.Id == availableLanguageSetId.Value);
 
                     var client = _httpClientFactory.CreateClient();
-                    var xmlDoc = await DownloadAvailableResources(client, availableResources.DownloadUrl, Services.StoreContext.CurrentStore.GetBaseUrl());
+                    var xmlDoc = await DownloadAvailableResources(client, source.DownloadUrl, Services.StoreContext.CurrentStore.GetBaseUrl());
 
                     await _xmlResourceManager.ImportResourcesFromXmlAsync(language, xmlDoc, null, false, mode, updateTouched);
 
                     var serializedImportInfo = JsonConvert.SerializeObject(new LastResourcesImportInfo
                     {
-                        TranslatedPercentage = availableResources.TranslatedPercentage,
+                        TranslatedPercentage = source.TranslatedPercentage,
                         ImportedOn = DateTime.UtcNow
                     });
 
@@ -574,36 +593,31 @@ namespace Smartstore.Admin.Controllers
                 await asyncState.CreateAsync(state, null, false, CancellationTokenSource.CreateLinkedTokenSource(cancelToken));
 
                 var client = httpClientFactory.CreateClient();
-                var resources = context.AvailableResources.Resources.First(x => x.Id == context.SetId);
-                var xmlDoc = await DownloadAvailableResources(client, resources.DownloadUrl, context.StoreUrl, cancelToken);
+                var source = context.AvailableResources.Resources.First(x => x.Id == context.SetId);
+                var xmlDoc = await DownloadAvailableResources(client, source.DownloadUrl, context.StoreUrl, cancelToken);
 
                 if (!cancelToken.IsCancellationRequested)
                 {
                     using var dbScope = new DbContextScope(db, minHookImportance: HookImportance.Essential);
                     await asyncState.UpdateAsync<LanguageDownloadState>(state => state.ProgressMessage = context.StringResources["Admin.Configuration.Languages.ImportResources"]);
 
-                    var cultureCode = resources.Language.Culture;
-
                     // 2. Create language entity (if required).
                     var language = await db.Languages
-                        .Where(x => x.LanguageCulture == cultureCode)
+                        .Include(x => x.LocaleStringResources)
+                        .Where(x => x.LanguageCulture == source.Language.Culture)
                         .FirstOrDefaultAsync(cancelToken);
 
                     if (language == null)
                     {
-                        var maxDisplayOrder = await db.Languages
-                            .Where(x => x.Published)
-                            .MaxAsync(x => (int?)x.DisplayOrder, cancelToken);
-
                         language = new Language
                         {
-                            LanguageCulture = cultureCode,
-                            UniqueSeoCode = resources.Language.TwoLetterIsoCode,
-                            Name = GetCultureDisplayName(cultureCode) ?? resources.Name,
-                            FlagImageFileName = GetFlagFileName(cultureCode, appContext),
-                            Rtl = resources.Language.Rtl,
+                            LanguageCulture = source.Language.Culture,
+                            UniqueSeoCode = source.Language.TwoLetterIsoCode,
+                            Name = GetCultureDisplayName(source.Language.Culture) ?? source.Name,
+                            FlagImageFileName = GetFlagFileName(source.Language.Culture, appContext),
+                            Rtl = source.Language.Rtl,
                             Published = false,
-                            DisplayOrder = maxDisplayOrder.HasValue ? maxDisplayOrder.Value + 1 : 0
+                            DisplayOrder = ((await db.Languages.MaxAsync(x => (int?)x.DisplayOrder, cancelToken)) ?? 0) + 1
                         };
 
                         db.Languages.Add(language);
@@ -616,7 +630,7 @@ namespace Smartstore.Admin.Controllers
                     // 4. Save import info.
                     var serializedImportInfo = JsonConvert.SerializeObject(new LastResourcesImportInfo
                     {
-                        TranslatedPercentage = resources.TranslatedPercentage,
+                        TranslatedPercentage = source.TranslatedPercentage,
                         ImportedOn = DateTime.UtcNow
                     });
 
@@ -862,7 +876,7 @@ namespace Smartstore.Admin.Controllers
                 if (lastImportInfos.TryGetValue(language.Id, out var info))
                 {
                     model.LastResourcesImportOn = Services.DateTimeHelper.ConvertToUserTime(info.ImportedOn, DateTimeKind.Utc);
-                    model.LastResourcesImportOnString = model.LastResourcesImportOn.Humanize(false);
+                    model.LastResourcesImportOnString = model.LastResourcesImportOn.ToHumanizedString(false);
                 }
 
                 // Provide downloadable resources.
@@ -940,7 +954,7 @@ namespace Smartstore.Admin.Controllers
             model.TranslatedPercentage = resources.TranslatedPercentage;
             model.IsDownloadRunning = state != null && state.Id == resources.Id;
             model.UpdatedOn = Services.DateTimeHelper.ConvertToUserTime(resources.UpdatedOn, DateTimeKind.Utc);
-            model.UpdatedOnString = model.UpdatedOn.Humanize(false);
+            model.UpdatedOnString = model.UpdatedOn.ToHumanizedString(false);
             model.FlagImageFileName = GetFlagFileName(resources.Language.Culture, Services.ApplicationContext);
 
             if (language != null && lastImportInfos.TryGetValue(language.Id, out LastResourcesImportInfo info))
@@ -953,7 +967,7 @@ namespace Smartstore.Admin.Controllers
                 }
 
                 model.LastResourcesImportOn = Services.DateTimeHelper.ConvertToUserTime(info.ImportedOn, DateTimeKind.Utc);
-                model.LastResourcesImportOnString = model.LastResourcesImportOn.Humanize(false);
+                model.LastResourcesImportOnString = model.LastResourcesImportOn.ToHumanizedString(false);
             }
         }
 

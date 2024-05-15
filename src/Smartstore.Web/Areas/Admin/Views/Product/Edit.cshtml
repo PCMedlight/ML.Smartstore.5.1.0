@@ -1,9 +1,7 @@
-﻿@using Smartstore.Core.Catalog.Products
-
-@model ProductModel
+﻿@model ProductModel
 
 @{
-    ViewBag.Title = T("Admin.Catalog.Products.EditProductDetails").Value;
+    ViewBag.Title = @Model.Name.Truncate(45, "...") + " / " + T("Admin.Common.Edit").Value;
 }
 
 <form asp-action="Edit" method="post" id="product-form">
@@ -14,7 +12,7 @@
             {
                 <img src="@Url.Content(Model.PictureThumbnailUrl)" />
             }
-            <span>@ViewBag.Title - <span title="@Model.Name">@Model.Name.Truncate(45, "...")</span></span>
+            <span title="@Model.Name">@ViewBag.Title </span>
         </div>
         <div class="options">
             <zone name="admin_button_toolbar_before"></zone>

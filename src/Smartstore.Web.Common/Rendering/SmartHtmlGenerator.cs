@@ -1,4 +1,5 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Collections.Frozen;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -13,6 +14,9 @@ namespace Smartstore.Web.Rendering
     /// </summary>
     public class SmartHtmlGenerator : DefaultHtmlGenerator
     {
+        private readonly static FrozenSet<string> _nonInputTypes = 
+            new string[] { "button", "checkbox", "file", "hidden", "image", "radio", "range", "reset", "search", "submit" }.ToFrozenSet();
+        
         public SmartHtmlGenerator(
             IAntiforgery antiforgery,
             IOptions<MvcViewOptions> optionsAccessor,
@@ -101,11 +105,18 @@ namespace Smartstore.Web.Rendering
                 isExplicitValue,
                 format,
                 htmlAttributes);
-
-            if (inputType is (InputType.Text or InputType.Password))
+            
+            if (inputType is InputType.Text or InputType.Password)
             {
-                if (htmlAttributes == null || (htmlAttributes.TryGetValueAs<string>("type", out var strType) && strType is ("text" or "password")))
+                // Determine input type attr value first from generated tag, then from htmlAttributes
+                if (!tag.Attributes.TryGetValue("type", out var strType) && htmlAttributes != null)
                 {
+                    htmlAttributes.TryGetValueAs("type", out strType);
+                }
+                
+                if (strType.IsEmpty() || !_nonInputTypes.Contains(strType))
+                {
+                    // Add .form-control to text, password, number..., but not to hidden, checkbox, radio...
                     tag.Attributes.AddInValue("class", ' ', "form-control");
                 }
             }

@@ -4,43 +4,7 @@
 // --------------------------------------------------
 
 [dir=rtl] {
-    // Layout
-    // ------
-    .section-header {
-        .title {
-            padding-right: 0;
-            padding-left: 5px;
 
-            > i {
-                margin-left: 0.5rem;
-                margin-right: initial;
-            }
-
-            > img {
-                margin-left: 5px;
-                margin-right: initial;
-            }
-        }
-
-        .options {
-            padding-right: 5px;
-            padding-left: 0;
-        }
-    }
-    // Main Menu
-    // ---------
-    #navbar #navbar-menu .nav-item > .dropdown-menu {
-        // Dropdown bubble
-        &:before {
-            right: 10px;
-            left: auto;
-        }
-
-        &:after {
-            right: 11px;
-            left: auto;
-        }
-    }
     // Forms
     // -----
     .ctl-label {

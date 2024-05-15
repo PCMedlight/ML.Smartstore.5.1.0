@@ -57,12 +57,15 @@ $enable-grid-classes:           true !default;
 $enable-responsive-font-sizes:  null !default;
 $enable-important-utilities:    true !default;
 $enable-rfs:                    null !default;
+$enable-negative-margins:       true !default;
 
 
 // Body
 
 $body-bg:                   $white !default;
 $body-color:                null !default;
+$body-secondary-color:      null !default;
+$body-tertiary-color:       null !default;
 
 
 // Links
@@ -89,10 +92,13 @@ $border-radius-xxl:           2rem !default;
 $border-radius-pill:          50rem !default;
 $rounded-pill:                50rem !default;
 
-$box-shadow:                  null !default;
-$box-shadow-sm:               null !default;
-$box-shadow-lg:               null !default;
 $box-shadow-inset:            null !default;
+$box-shadow-sm:               0 calc(2px * var(--shadow-yoffset, 1)) 16px -2px rgba(var(--shadow-colorbase-rgb), calc(var(--shadow-intensity) * 0.12)), 
+                              0 calc(2px * var(--shadow-yoffset, 1)) 3px -2px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.15)) !default;
+$box-shadow:                  0 calc(6px * var(--shadow-yoffset, 1)) 24px -5px rgba(var(--shadow-colorbase-rgb), calc(var(--shadow-intensity) * 0.12)), 
+                              0 calc(5px * var(--shadow-yoffset, 1)) 12px -5px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.17)) !default;
+$box-shadow-lg:               0 calc(10px * var(--shadow-yoffset, 1)) 40px -4px rgba(var(--shadow-colorbase-rgb), calc(var(--shadow-intensity) * 0.14)), 
+                              0 calc(12px * var(--shadow-yoffset, 1)) 28px -12px rgba(var(--shadow-color-rgb), calc(var(--shadow-intensity) * 0.2)) !default;
 
 $embed-responsive-aspect-ratios: ( 
     (21 9), 
@@ -130,6 +136,12 @@ $display3-size:               null !default;
 $display4-size:               null !default;
 
 $hr-opacity:                  .12 !default;
+
+
+// Tables
+
+$table-accent-bg:               rgba($black, .03) !default;
+$table-hover-bg:                rgba($black, .05) !default;
 
 
 // Buttons + Forms
@@ -171,7 +183,7 @@ $btn-active-border-tint-amount:   10% !default;
 
 // Form Check
 
-$form-check-input-border:               1px solid rgba(#000, .15);
+$form-check-input-border:               1px solid rgba($black, .15);
 $form-check-input-focus-border:         rgba(var(--form-check-checked-bg-rgb), 0.5);
 $form-check-input-focus-box-shadow:     0 0 0 0.2rem rgba(var(--form-check-checked-bg-rgb), 0.25);
 $form-check-transition:                 box-shadow 0.12s ease-in-out;
@@ -209,6 +221,12 @@ $dropdown-bg:                   $white !default;
 $dropdown-border-width:         1px !default;
 
 
+// Placeholders
+
+$placeholder-opacity-max:       .5 !default;
+$placeholder-opacity-min:       .2 !default;
+
+
 
 // Pagination Mini
 // --------------------------------------------------
@@ -221,15 +239,27 @@ $pagination-padding-x-xs:           6px !default;
 // Modal
 // --------------------------------------------------
 
-$modal-inner-padding:               1.25rem !default;
-$modal-header-padding:              1.25rem !default;
-$modal-content-border-width:        0 !default;
+$modal-footer-bg:                   rgba($black, 0.04) !default;
+$modal-footer-margin-between:       0.375rem !default;
+$modal-inner-padding:               1.5rem !default;
+$modal-header-padding-x:            1.5rem !default;
+$modal-header-padding-y:            1rem !default;
+$modal-content-border-width:        0px !default;
 $modal-content-border-color:        rgba($black, .06) !default;
 $modal-backdrop-bg:                 $black !default;
 $modal-backdrop-opacity:            .68 !default;
 $modal-transition:                  all 0.2s ease-out !default;
+$modal-content-border-radius:       var(--border-radius-xl) !default;
+$modal-content-inner-border-radius: subtract($modal-content-border-radius, $modal-content-border-width) !default;
+$modal-content-box-shadow-xs:       var(--box-shadow-md) !default;
+$modal-content-box-shadow-sm-up:    var(--box-shadow-lg) !default;
 
 
 // Navs
 
 $nav-pills-link-active-color:       $white;
+
+
+// Close
+
+$btn-close-focus-shadow:            none;

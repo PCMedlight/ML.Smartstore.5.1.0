@@ -57,7 +57,7 @@ namespace Smartstore.Web.Theming
 
         public static IHtmlContent ThemeVarEditor(this IHtmlHelper helper, ThemeVariableInfo info, object value)
         {
-            Guard.NotNull(info, "info");
+            Guard.NotNull(info);
 
             string expression = helper.NameForThemeVar(info);
             string strValue = value?.ToString().EmptyNull();
@@ -70,7 +70,8 @@ namespace Smartstore.Web.Theming
 
             if (isValidColor)
             {
-                control = helper.ColorBox(expression, strValue, info.DefaultValue);
+                // Don't allow color swatches in theme configuration because of Sass color functions
+                control = helper.ColorBox(expression, strValue, info.DefaultValue, false);
             }
             else if (info.Type == ThemeVariableType.Boolean)
             {

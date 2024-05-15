@@ -8,15 +8,13 @@ using Smartstore.Core.Identity;
 using Smartstore.Core.Localization;
 using Smartstore.Engine.Modularity;
 using Smartstore.Http;
+using Smartstore.StripeElements.Providers;
 using Smartstore.StripeElements.Settings;
 
 namespace Smartstore.StripeElements
 {
     internal class Module : ModuleBase, IConfigurable, ICookiePublisher
     {
-        // INFO: Update API Version when updating Stripe.net dll
-        public static string ApiVersion => "2022-08-01";
-
         private readonly IPaymentService _paymentService;
 
         public Module(IPaymentService paymentService)
@@ -32,8 +30,7 @@ namespace Smartstore.StripeElements
         public async Task<IEnumerable<CookieInfo>> GetCookieInfosAsync()
         {
             var store = Services.StoreContext.CurrentStore;
-
-            var isActiveStripe = await _paymentService.IsPaymentProviderActiveAsync("Smartstore.StripeElements", null, store.Id);
+            var isActiveStripe = await _paymentService.IsPaymentProviderActiveAsync(StripeElementsProvider.SystemName, null, store.Id);
 
             if (isActiveStripe)
             {

@@ -1,11 +1,10 @@
 ﻿using Smartstore.Caching;
 using Smartstore.Core.Catalog;
 using Smartstore.Core.Catalog.Categories;
-using Smartstore.Core.Content.Menus;
 using Smartstore.Core.Data;
 using Smartstore.Events;
 
-namespace Smartstore.Web.Rendering.Menus
+namespace Smartstore.Core.Content.Menus
 {
     /// <summary>
     /// Invalidates all menus that contain the <see cref="CatalogMenuProvider"/>
@@ -17,8 +16,8 @@ namespace Smartstore.Web.Rendering.Menus
         private readonly ICacheManager _cache;
         private readonly SmartDbContext _db;
 
-        private List<string> _invalidated = new List<string>();
-        private List<string> _countsResetted = new List<string>();
+        private List<string> _invalidated = new();
+        private List<string> _countsResetted = new();
 
         public CatalogMenuInvalidator(
             IMenuService menuService,
@@ -81,6 +80,7 @@ namespace Smartstore.Web.Rendering.Menus
                             {
                                 dirty = true;
                                 x.Value.ElementsCount = null;
+                                x.Value.ElementsCountResolved = false;
                             }
                         }, true);
 

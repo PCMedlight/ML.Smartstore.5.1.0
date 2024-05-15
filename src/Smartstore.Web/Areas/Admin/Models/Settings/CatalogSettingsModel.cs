@@ -74,7 +74,7 @@ namespace Smartstore.Admin.Models
         public int ManufacturerItemsToDisplayOnHomepage { get; set; }
 
         [LocalizedDisplay("*ManufacturerItemsToDisplayInOffcanvasMenu")]
-        public int ManufacturerItemsToDisplayInOffCanvasMenu { get; set; }
+        public int ManufacturerItemsToDisplayInOffcanvasMenu { get; set; }
 
         [LocalizedDisplay("*ShowManufacturerPictures")]
         public bool ShowManufacturerPictures { get; set; }
@@ -165,6 +165,9 @@ namespace Smartstore.Admin.Models
         [LocalizedDisplay("*ShowManufacturerLogoInLists")]
         public bool ShowManufacturerLogoInLists { get; set; }
 
+        [LocalizedDisplay("*LinkManufacturerLogoInLists")]
+        public bool LinkManufacturerLogoInLists { get; set; }
+
         [LocalizedDisplay("*ShowProductOptionsInLists")]
         public bool ShowProductOptionsInLists { get; set; }
 
@@ -239,14 +242,6 @@ namespace Smartstore.Admin.Models
         [LocalizedDisplay("*RecentlyAddedProductsNumber")]
         public int RecentlyAddedProductsNumber { get; set; }
 
-        [LocalizedDisplay("*ShowShareButton")]
-        public bool ShowShareButton { get; set; }
-
-        [UIHint("Textarea")]
-        [AdditionalMetadata("rows", 5)]
-        [LocalizedDisplay("*PageShareCode")]
-        public string PageShareCode { get; set; }
-
         [LocalizedDisplay("*ProductsAlsoPurchasedEnabled")]
         public bool ProductsAlsoPurchasedEnabled { get; set; }
 
@@ -275,6 +270,9 @@ namespace Smartstore.Admin.Models
         [LocalizedDisplay("*ShowLinkedAttributeValueImage")]
         public bool ShowLinkedAttributeValueImage { get; set; }
 
+        [LocalizedDisplay("*ShowProductTags")]
+        public bool ShowProductTags { get; set; }
+
         #endregion
 
         public PriceSettingsModel PriceSettings { get; set; } = new();
@@ -287,7 +285,7 @@ namespace Smartstore.Admin.Models
         {
             RuleFor(x => x.PriceSettings.ShowOfferCountdownRemainingHours)
                 .GreaterThan(0)
-                .When(x => x.PriceSettings.ShowOfferCountdownRemainingHours != null);
+                .WhenSettingOverriden((m, ctx) => m.PriceSettings.ShowOfferCountdownRemainingHours != null);
 
             RuleFor(x => x.MaxItemsToDisplayInCatalogMenu)
                 .GreaterThanOrEqualTo(0);
@@ -312,6 +310,12 @@ namespace Smartstore.Admin.Models
 
             RuleFor(x => x.RecentlyAddedProductsNumber)
                 .GreaterThan(0);
+
+            RuleFor(x => x.LabelAsNewForMaxDays)
+                .GreaterThan(0)
+                .WhenSettingOverriden((m, ctx) => m.LabelAsNewForMaxDays != null);
+
+            RuleFor(x => x.DisplayAllImagesNumber).GreaterThanOrEqualTo(0);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Smartstore.Core.Checkout.Cart;
+﻿using Smartstore.Core.Catalog.Products;
+using Smartstore.Core.Checkout.Cart;
 using Smartstore.Core.Checkout.Cart.Events;
 using Smartstore.Core.Checkout.GiftCards;
 using Smartstore.Core.Checkout.Orders;
@@ -24,6 +25,7 @@ namespace Smartstore.Web.Components
         private readonly IShoppingCartService _shoppingCartService;
         private readonly ILocalizationService _localizationService;
         private readonly IOrderCalculationService _orderCalculationService;
+        private readonly IProductService _productService;
         private readonly IShippingService _shippingService;
         private readonly ShoppingCartSettings _shoppingCartSettings;
         private readonly MeasureSettings _measureSettings;
@@ -38,6 +40,7 @@ namespace Smartstore.Web.Components
             IShoppingCartService shoppingCartService,
             ILocalizationService localizationService,
             IOrderCalculationService orderCalculationService,
+            IProductService productService,
             IShippingService shippingService,
             ShoppingCartSettings shoppingCartSettings,
             MeasureSettings measureSettings,
@@ -51,6 +54,7 @@ namespace Smartstore.Web.Components
             _shoppingCartService = shoppingCartService;
             _localizationService = localizationService;
             _orderCalculationService = orderCalculationService;
+            _productService = productService;
             _shippingService = shippingService;
             _shoppingCartSettings = shoppingCartSettings;
             _measureSettings = measureSettings;
@@ -65,17 +69,20 @@ namespace Smartstore.Web.Components
             var currency = Services.WorkContext.WorkingCurrency;
             var customer = orderTotalsEvent.Customer ?? Services.WorkContext.CurrentCustomer;
             var storeId = orderTotalsEvent.StoreId ?? Services.StoreContext.CurrentStore.Id;
-
             var cart = await _shoppingCartService.GetCartAsync(customer, ShoppingCartType.ShoppingCart, storeId);
+
             var model = new OrderTotalsModel
             {
-                IsEditable = isEditable
+                IsEditable = isEditable,
+                TotalQuantity = cart.GetTotalQuantity()
             };
 
-            if (!cart.Items.Any())
+            if (!cart.HasItems)
             {
                 return View(model);
             }
+
+            var batchContext = _productService.CreateProductBatchContext(cart.GetAllProducts(), null, customer, false);
 
             model.Weight = await _shippingService.GetCartTotalWeightAsync(cart);
 
@@ -86,23 +93,26 @@ namespace Smartstore.Web.Components
             }
 
             // Subtotal
-            var cartSubTotal = await _orderCalculationService.GetShoppingCartSubtotalAsync(cart);
-            model.CartSubtotal = cartSubTotal;
-            model.SubTotal = _currencyService.ConvertFromPrimaryCurrency(cartSubTotal.SubtotalWithoutDiscount.Amount, currency);
+            var subtotal = await _orderCalculationService.GetShoppingCartSubtotalAsync(cart, batchContext: batchContext);
+            model.CartSubtotal = subtotal;
+            model.SubTotal = _currencyService.ConvertFromPrimaryCurrency(subtotal.SubtotalWithoutDiscount.Amount, currency);
 
-            if (cartSubTotal.DiscountAmount > decimal.Zero)
+            if (subtotal.DiscountAmount > decimal.Zero)
             {
-                var subTotalDiscountAmountConverted = _currencyService.ConvertFromPrimaryCurrency(cartSubTotal.DiscountAmount.Amount, currency);
+                model.SubTotalDiscount = _currencyService.ConvertFromPrimaryCurrency(subtotal.DiscountAmount.Amount, currency) * -1;
+                model.AllowRemovingSubTotalDiscount = subtotal.AppliedDiscount != null
+                    && subtotal.AppliedDiscount.RequiresCouponCode
+                    && subtotal.AppliedDiscount.CouponCode.HasValue()
+                    && isEditable;
+            }
 
-                model.SubTotalDiscount = subTotalDiscountAmountConverted * -1;
-                model.AllowRemovingSubTotalDiscount = cartSubTotal.AppliedDiscount != null
-                    && cartSubTotal.AppliedDiscount.RequiresCouponCode
-                    && cartSubTotal.AppliedDiscount.CouponCode.HasValue()
-                    && model.IsEditable;
+            if (isEditable && _shoppingCartSettings.AllowActivatableCartItems)
+            {
+                model.SubtotalLabel = T("ShoppingCart.Totals.SubTotalSelectedProducts", model.TotalQuantity);
             }
 
             // Shipping info
-            model.RequiresShipping = cart.IsShippingRequired();
+            model.RequiresShipping = cart.IsShippingRequired;
             if (model.RequiresShipping)
             {
                 var shippingTotal = await _orderCalculationService.GetShoppingCartShippingTotalAsync(cart);
@@ -137,10 +147,10 @@ namespace Smartstore.Web.Components
             }
             else
             {
-                (Money price, TaxRatesDictionary taxRates) = await _orderCalculationService.GetShoppingCartTaxTotalAsync(cart);
-                var cartTax = _currencyService.ConvertFromPrimaryCurrency(price.Amount, currency);
+                (Money tax, TaxRatesDictionary taxRates) = await _orderCalculationService.GetShoppingCartTaxTotalAsync(cart);
+                model.Tax = _currencyService.ConvertFromPrimaryCurrency(tax.Amount, currency);
 
-                if (price == decimal.Zero && _taxSettings.HideZeroTax)
+                if (tax == decimal.Zero && _taxSettings.HideZeroTax)
                 {
                     displayTax = false;
                     displayTaxRates = false;
@@ -149,7 +159,6 @@ namespace Smartstore.Web.Components
                 {
                     displayTaxRates = _taxSettings.DisplayTaxRates && taxRates.Count > 0;
                     displayTax = !displayTaxRates;
-                    model.Tax = cartTax.ToString(true);
 
                     foreach (var taxRate in taxRates)
                     {
@@ -172,7 +181,7 @@ namespace Smartstore.Web.Components
             model.ShowConfirmOrderLegalHint = _shoppingCartSettings.ShowConfirmOrderLegalHint;
 
             // Cart total
-            var cartTotal = await _orderCalculationService.GetShoppingCartTotalAsync(cart);
+            var cartTotal = await _orderCalculationService.GetShoppingCartTotalAsync(cart, batchContext: batchContext);
             model.CartTotal = cartTotal;
 
             if (cartTotal.ConvertedAmount.Total.HasValue)
@@ -193,7 +202,7 @@ namespace Smartstore.Web.Components
                 model.AllowRemovingOrderTotalDiscount = cartTotal.AppliedDiscount != null
                     && cartTotal.AppliedDiscount.RequiresCouponCode
                     && cartTotal.AppliedDiscount.CouponCode.HasValue()
-                    && model.IsEditable;
+                    && isEditable;
             }
 
             // Gift cards
